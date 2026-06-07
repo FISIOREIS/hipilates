@@ -13,7 +13,7 @@ const FOTOS = [
 ]
 
 const PLANOS = [
-  { nome: '1× Semana', preco: '15€', sub: 'por aula', extra: '60€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã disponível', destaque: true },
+  { nome: '1× Semana', preco: '15€', sub: 'por aula', extra: '60€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã\nAcresce taxa de inscrição: 10€ (inclui seguro desportivo anual)', destaque: true },
   { nome: '2× Semana', preco: '12,50€', sub: 'por aula', extra: '100€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nMáxima evolução', destaque: false },
   { nome: 'Duo', preco: '30€', sub: 'por aula / pessoa', extra: 'Pack 10 aulas: 250€/pessoa', desc: 'Sessão para 2 pessoas\nHorários de manhã e tarde\nMais personalizado', destaque: false },
   { nome: 'Individual', preco: '45€', sub: 'por aula', extra: 'Pack 10 aulas: 400€', desc: 'Sessão 100% personalizada\nHorários de manhã e tarde\nAcompanhamento dedicado', destaque: false },
@@ -152,9 +152,7 @@ export default function Landing() {
             ))}
           </div>
           <div style={{textAlign:'center',marginTop:'2.5rem'}}>
-            <p style={{fontSize:'12px',color:'rgba(255,255,255,0.4)',marginBottom:'1.5rem',lineHeight:1.7}}>
-              Taxa de inscrição: 10€ (inclui seguro desportivo anual)
-            </p>
+
             <Link to="/registo" style={{display:'inline-block',padding:'16px 40px',background:'white',color:'#2a2420',textDecoration:'none',fontSize:'10px',letterSpacing:'2.5px',textTransform:'uppercase',fontWeight:700,borderRadius:'2px'}}>
               Começar agora
             </Link>
