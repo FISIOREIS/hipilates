@@ -3,13 +3,16 @@ import { Link } from 'react-router-dom'
 
 const BASE = 'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/'
 const FOTOS = [
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.34.jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35.jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35%20(1).jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35%20(2).jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.36.jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.36%20(1).jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.37.jpeg',
+  BASE + '1',
+  BASE + '2',
+  BASE + '3',
+  BASE + '4',
+  BASE + '5',
+  BASE + '6',
+  BASE + '7',
+  BASE + '8',
+  BASE + '9',
+  BASE + '10',
 ]
 
 const PLANOS = [
@@ -61,13 +64,12 @@ export default function Landing() {
       </nav>
 
       {/* HERO */}
-      <div style={{position:'relative',height:'70vh',minHeight:'420px',overflow:'hidden'}}>
+      <div style={{position:'relative',height:'75vh',minHeight:'420px',overflow:'hidden'}}>
         {FOTOS.map((f, i) => (
           <div key={i} style={{
             position:'absolute',inset:0,
             backgroundImage:`url(${f})`,
-            backgroundSize:'contain',backgroundPosition:'center',backgroundRepeat:'no-repeat',
-            backgroundColor:'#1a1714',
+            backgroundSize:'cover',backgroundPosition:'center 30%',backgroundRepeat:'no-repeat',
             opacity: i === fotoAtual ? 1 : 0,
             transition:'opacity 1.2s ease',
           }} />
