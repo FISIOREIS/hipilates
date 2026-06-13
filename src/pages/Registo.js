@@ -31,22 +31,37 @@ function getHorasPermitidas(plano, diaSemana) {
 
 const REGULAMENTO = `
 **Inscrição**
-Todos os alunos têm de efetuar uma inscrição válida por 12 meses a partir da data de inscrição, incluindo: preenchimento da ficha de inscrição, pagamento da taxa de inscrição de 10€ (inclui seguro desportivo) e pagamento da mensalidade do mês em que se inscreve. Em caso de desistência, os valores pagos não serão reembolsados.
+- Inscrição válida por 12 meses a partir da data de inscrição.
+- Inclui: ficha de inscrição preenchida, pagamento da taxa de inscrição (10€, inclui seguro desportivo) e pagamento da mensalidade do mês em que se inscreve.
+- Em caso de desistência, os valores pagos não são reembolsados.
 
 **Mensalidades**
-A mensalidade deve ser paga até ao dia 8 de cada mês. A falta de pagamento por períodos superiores a um mês sem aviso prévio implica a perda do lugar na turma. As mensalidades são devidas mesmo em caso de ausência. O aluno que pretenda mudar de modalidade deve informar no mês anterior. Em caso de desistência, é necessário avisar com 30 dias de antecedência; caso contrário, o mês será cobrado na totalidade.
+- Pagamento até ao dia 8 de cada mês.
+- Falta de pagamento superior a 1 mês sem aviso prévio implica perda do lugar na turma.
+- As mensalidades são devidas mesmo em caso de ausência.
+- Mudança de modalidade deve ser comunicada no mês anterior.
+- Desistência: aviso com 30 dias de antecedência, caso contrário o mês é cobrado na totalidade.
 
 **Pagamento Duo e Individual**
-O pagamento das aulas avulso e dos packs é efetuado no início da aula ou aquando da aquisição do pack.
+- Pagamento efetuado no início da aula ou na aquisição do pack.
 
 **Cancelamentos e Reposições**
-Em caso de falta, o aluno deve avisar com pelo menos 24 horas de antecedência para ter direito a uma aula de reposição, que ficará em crédito na aplicação. A vaga não pode ser cedida a outra pessoa. Cancelamentos com menos de 24 horas não dão direito a reposição. Em caso de necessidade de alteração da aula por parte do professor ou clínica, esta será compensada.
+- Avisar com pelo menos 24 horas de antecedência para ter direito a aula de reposição (fica em crédito na aplicação).
+- A vaga não pode ser cedida a outra pessoa.
+- Cancelamentos com menos de 24 horas não dão direito a reposição.
+- Alterações por parte do professor ou clínica serão compensadas.
 
 **Condições Gerais**
-O Pilates Clínico funciona durante os 12 meses do ano. Os alunos serão distribuídos em turmas de acordo com o seu nível técnico e horário disponível. As aulas têm duração de 50 a 55 minutos. A direção técnica poderá alterar a constituição dos grupos ou professores, sempre que assim o entenda, para o bom funcionamento das aulas.
+- Funcionamento durante os 12 meses do ano.
+- Distribuição em turmas por nível técnico e horário disponível.
+- Duração das aulas: 50 a 55 minutos.
+- A direção técnica pode alterar grupos ou professores quando necessário.
 
 **Cálculo Anual de Aulas**
-O plano de 1× por semana dá direito a 48 aulas por ano (de janeiro a dezembro). O plano de 2× por semana dá direito a 96 aulas por ano. Os alunos que iniciem a sua inscrição durante o ano terão o número de aulas calculado proporcionalmente ao período restante até dezembro. Sempre que o estúdio encerrar em períodos previamente comunicados, as aulas não realizadas serão automaticamente creditadas na conta do aluno, ficando disponíveis como aulas de reposição a utilizar ao longo do ano.
+- Plano 1× por semana: 48 aulas/ano (janeiro a dezembro).
+- Plano 2× por semana: 96 aulas/ano.
+- Inscrições durante o ano: número de aulas calculado proporcionalmente até dezembro.
+- Encerramentos previamente comunicados: aulas creditadas para reposição ao longo do ano.
 `
 
 export default function Registo() {
@@ -86,7 +101,7 @@ export default function Registo() {
 
   async function registar() {
     if (!aceitaPrivacidade) { setErro('Por favor aceite a Política de Privacidade.'); return }
-    if (!leuRegulamento) { setErro('Por favor confirme que leu o Regulamento do Estúdio.'); return }
+    if (!leuRegulamento) { setErro('Por favor confirme que leu o Regulamento Interno do Estúdio.'); return }
     setErro(''); setLoading(true)
     const { error } = await supabase.auth.signUp({
       email: form.email, password: form.password,
@@ -113,7 +128,7 @@ export default function Registo() {
     setLoading(false)
   }
 
-  const passoLabels = ['Dados Pessoais','Saúde','Horários','Consentimentos','Confirmação']
+  const passoLabels = ['Dados Pessoais','Saúde','Horários','Regulamento Interno','Confirmação']
   const progresso = (passo / passoLabels.length) * 100
 
   return (
@@ -344,25 +359,28 @@ export default function Registo() {
           {passo === 4 && (
             <>
               <div className="ficha-section">
-                <div className="ficha-section-title">Regulamento do Estúdio</div>
+                <div className="ficha-section-title">Regulamento Interno do Estúdio</div>
                 <p style={{fontSize:'12px',color:'var(--texto-muted)',marginBottom:'12px',lineHeight:1.6}}>
                   Por favor leia o regulamento antes de confirmar a sua inscrição.
                 </p>
                 <div className="regulamento">
                   {REGULAMENTO.split('\n\n').map((bloco, i) => {
-                    if (bloco.startsWith('**') && bloco.includes('\n')) {
-                      const [titulo, ...resto] = bloco.split('\n')
-                      return (
-                        <div key={i}>
-                          <h3>{titulo.replace(/\*\*/g,'')}</h3>
-                          <p>{resto.join(' ')}</p>
-                        </div>
-                      )
-                    }
-                    if (bloco.startsWith('**')) {
-                      return <h3 key={i}>{bloco.replace(/\*\*/g,'')}</h3>
-                    }
-                    return <p key={i}>{bloco}</p>
+                    const linhas = bloco.split('\n').filter(l => l.trim())
+                    const titulo = linhas[0]?.startsWith('**') ? linhas[0].replace(/\*\*/g,'') : null
+                    const resto = titulo ? linhas.slice(1) : linhas
+                    const itens = resto.filter(l => l.startsWith('- '))
+                    const paragrafos = resto.filter(l => !l.startsWith('- '))
+                    return (
+                      <div key={i}>
+                        {titulo && <h3>{titulo}</h3>}
+                        {paragrafos.map((p, j) => <p key={`p${j}`}>{p}</p>)}
+                        {itens.length > 0 && (
+                          <ul style={{margin:'0 0 8px 0', paddingLeft:'18px'}}>
+                            {itens.map((it, j) => <li key={`i${j}`} style={{marginBottom:'4px'}}>{it.replace(/^- /,'')}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    )
                   })}
                 </div>
               </div>
@@ -370,7 +388,7 @@ export default function Registo() {
               <div style={{display:'flex',alignItems:'flex-start',gap:'12px',marginBottom:'1rem',marginTop:'1rem'}}>
                 <input type="checkbox" id="regulamento" checked={leuRegulamento} onChange={e=>setLeuRegulamento(e.target.checked)} style={{marginTop:'2px',accentColor:'var(--grafite)',flexShrink:0,width:'16px',height:'16px'}} />
                 <label htmlFor="regulamento" style={{fontSize:'12px',color:'var(--texto)',lineHeight:1.7,cursor:'pointer'}}>
-                  Li e aceito o Regulamento do Estúdio Hipilates. <span style={{color:'var(--erro)'}}>*</span>
+                  Li e aceito o Regulamento Interno do Estúdio Hipilates. <span style={{color:'var(--erro)'}}>*</span>
                 </label>
               </div>
 
