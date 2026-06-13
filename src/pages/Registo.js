@@ -10,7 +10,6 @@ const PLANOS = [
   { id: 'individual', nome: 'Individual', preco: '45€', sub: 'por aula', desc: 'Pack 10 aulas: 400€' },
 ]
 
-// Horários por plano
 const HORAS_MANHA_TARDE = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00']
 const HORAS_TARDE_NOITE = ['18:00','19:00','20:00']
 const HORAS_TODAS = [...HORAS_MANHA_TARDE, ...HORAS_TARDE_NOITE]
@@ -28,7 +27,6 @@ function getHorasPermitidas(plano, diaSemana) {
   if (plano === '1x_semana') return HORAS_TODAS
   return HORAS_MANHA_TARDE
 }
-
 const REGULAMENTO = `
 **Inscrição**
 Todos os alunos têm de efetuar uma inscrição válida por 12 meses a partir da data de inscrição, incluindo: preenchimento da ficha de inscrição, pagamento da taxa de inscrição de 10€ (inclui seguro desportivo) e pagamento da mensalidade do mês em que se inscreve. Em caso de desistência, os valores pagos não serão reembolsados.
@@ -48,7 +46,6 @@ O Pilates Clínico funciona durante os 12 meses do ano. Os alunos serão distrib
 **Cálculo Anual de Aulas**
 O plano de 1× por semana dá direito a 48 aulas por ano (de janeiro a dezembro). O plano de 2× por semana dá direito a 96 aulas por ano. Os alunos que iniciem a sua inscrição durante o ano terão o número de aulas calculado proporcionalmente ao período restante até dezembro. Sempre que o estúdio encerrar em períodos previamente comunicados, as aulas não realizadas serão automaticamente creditadas na conta do aluno, ficando disponíveis como aulas de reposição a utilizar ao longo do ano.
 `
-
 export default function Registo() {
   const [passo, setPasso] = useState(1)
   const [form, setForm] = useState({
@@ -79,7 +76,6 @@ export default function Registo() {
   const set = (k, v) => setForm(f => ({...f, [k]: v}))
   const toggleArr = (arr, setArr, v) => setArr(p => p.includes(v) ? p.filter(x=>x!==v) : [...p, v])
 
-  const planoSelecionado = PLANOS.find(p => p.id === form.plano)
   const diasDisponiveis = form.plano === '1x_semana'
     ? [...DIAS_SEMANA, 'Sáb']
     : DIAS_SEMANA
@@ -115,7 +111,6 @@ export default function Registo() {
 
   const passoLabels = ['Dados Pessoais','Saúde','Horários','Consentimentos','Confirmação']
   const progresso = (passo / passoLabels.length) * 100
-
   return (
     <div className="auth-wrap">
       {mostraPrivacidade && <Privacidade onFechar={()=>setMostraPrivacidade(false)} />}
@@ -131,7 +126,6 @@ export default function Registo() {
           </svg>
           <span style={{fontSize:'16px',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',color:'var(--grafite)'}}>Hipilates</span>
         </div>
-
         <div className="progress-bar">
           <div className="progress-fill" style={{width:`${progresso}%`}} />
         </div>
@@ -142,7 +136,6 @@ export default function Registo() {
         <div className="card-elevated">
           {erro && <div className="erro-msg">{erro}</div>}
 
-          {/* PASSO 1 — Dados pessoais */}
           {passo === 1 && (
             <>
               <div className="form-group">
@@ -176,7 +169,7 @@ export default function Registo() {
                 <input className="form-input" type="tel" value={form.telemovel} onChange={e=>set('telemovel',e.target.value)} placeholder="9XX XXX XXX" />
               </div>
               <div className="form-group">
-                <label className="form-label">Data de nascimento *</label>
+                <label className="form-label">Data de nascimento</label>
                 <input className="form-input" type="date" value={form.dataNasc} onChange={e=>set('dataNasc',e.target.value)} />
               </div>
               <div className="form-group">
@@ -207,7 +200,6 @@ export default function Registo() {
                   <input className="form-input" value={form.subNumero} onChange={e=>set('subNumero',e.target.value)} placeholder="Ex: 250" />
                 </div>
               </div>
-
               <p className="section-title">Plano</p>
               <div className="planos-grid">
                 {PLANOS.map(p => (
@@ -219,17 +211,29 @@ export default function Registo() {
                   </div>
                 ))}
               </div>
-
               <button className="btn btn-primary btn-full"
-                onClick={()=>{ if(!form.nome||!form.email||!form.password||!form.passwordConfirmar||!form.telemovel||!form.nif||!form.morada||!form.codigoPostal||!form.localidade){setErro('Preencha todos os campos obrigatórios.');return;} if(form.password.length<6){setErro('A password deve ter pelo menos 6 caracteres.');return;} if(form.password!==form.passwordConfirmar){setErro('As passwords não coincidem.');return;} setErro('');setPasso(2) }}>
+                onClick={()=>{
+                  const camposFalha = []
+                  if(!form.nome) camposFalha.push('nome')
+                  if(!form.email) camposFalha.push('email')
+                  if(!form.password) camposFalha.push('password')
+                  if(!form.passwordConfirmar) camposFalha.push('confirmar password')
+                  if(!form.telemovel) camposFalha.push('telemóvel')
+                  if(!form.nif) camposFalha.push('nif')
+                  if(!form.morada) camposFalha.push('morada')
+                  if(!form.codigoPostal) camposFalha.push('código postal')
+                  if(!form.localidade) camposFalha.push('localidade')
+                  if(camposFalha.length > 0){setErro('Campos em falta: ' + camposFalha.join(', '));return;}
+                  if(form.password.length<6){setErro('A password deve ter pelo menos 6 caracteres.');return;}
+                  if(form.password!==form.passwordConfirmar){setErro('As passwords não coincidem.');return;}
+                  setErro('');setPasso(2)
+                }}>
                 Continuar
               </button>
               <p className="switch-link">Já tem conta? <Link to="/login">Entrar aqui</Link></p>
             </>
           )}
-
-          {/* PASSO 2 — Saúde */}
-          {passo === 2 && (
+{passo === 2 && (
             <>
               <div className="ficha-section">
                 <div className="ficha-section-title">Objetivos</div>
@@ -279,15 +283,12 @@ export default function Registo() {
               </div>
             </>
           )}
-
-          {/* PASSO 3 — Horários */}
-          {passo === 3 && (
+{passo === 3 && (
             <>
               <div className="notif" style={{marginBottom:'1.25rem'}}>
                 <span>Selecione os horários em que prefere fazer as suas aulas. Iremos atribuir uma turma com base nas suas preferências.</span>
               </div>
-
-              {diasDisponiveis.map((dia, di) => {
+              {diasDisponiveis.map((dia) => {
                 const horas = getHorasPermitidas(form.plano, dia)
                 if (!horas.length) return null
                 return (
@@ -302,7 +303,6 @@ export default function Registo() {
                   </div>
                 )
               })}
-
               <div className="divider" />
               <div className="ficha-section">
                 <div className="ficha-section-title">Prefere ficar numa turma com alguém conhecido?</div>
@@ -318,16 +318,13 @@ export default function Registo() {
                   <input className="form-input" value={form.acompanhanteContacto} onChange={e=>set('acompanhanteContacto',e.target.value)} placeholder="Email ou telemóvel" />
                 </div>
               </div>
-
               <div style={{display:'flex',gap:'8px',marginTop:'1rem'}}>
                 <button className="btn btn-full" style={{marginTop:0}} onClick={()=>setPasso(2)}>Voltar</button>
                 <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>setPasso(4)}>Continuar</button>
               </div>
             </>
           )}
-
-          {/* PASSO 4 — Consentimentos */}
-          {passo === 4 && (
+{passo === 4 && (
             <>
               <div className="ficha-section">
                 <div className="ficha-section-title">Regulamento do Estúdio</div>
@@ -338,46 +335,34 @@ export default function Registo() {
                   {REGULAMENTO.split('\n\n').map((bloco, i) => {
                     if (bloco.startsWith('**') && bloco.includes('\n')) {
                       const [titulo, ...resto] = bloco.split('\n')
-                      return (
-                        <div key={i}>
-                          <h3>{titulo.replace(/\*\*/g,'')}</h3>
-                          <p>{resto.join(' ')}</p>
-                        </div>
-                      )
+                      return (<div key={i}><h3>{titulo.replace(/\*\*/g,'')}</h3><p>{resto.join(' ')}</p></div>)
                     }
-                    if (bloco.startsWith('**')) {
-                      return <h3 key={i}>{bloco.replace(/\*\*/g,'')}</h3>
-                    }
+                    if (bloco.startsWith('**')) return <h3 key={i}>{bloco.replace(/\*\*/g,'')}</h3>
                     return <p key={i}>{bloco}</p>
                   })}
                 </div>
               </div>
-
               <div style={{display:'flex',alignItems:'flex-start',gap:'12px',marginBottom:'1rem',marginTop:'1rem'}}>
                 <input type="checkbox" id="regulamento" checked={leuRegulamento} onChange={e=>setLeuRegulamento(e.target.checked)} style={{marginTop:'2px',accentColor:'var(--grafite)',flexShrink:0,width:'16px',height:'16px'}} />
                 <label htmlFor="regulamento" style={{fontSize:'12px',color:'var(--texto)',lineHeight:1.7,cursor:'pointer'}}>
                   Li e aceito o Regulamento do Estúdio Hipilates. <span style={{color:'var(--erro)'}}>*</span>
                 </label>
               </div>
-
               <div style={{display:'flex',alignItems:'flex-start',gap:'12px',marginBottom:'1rem'}}>
                 <input type="checkbox" id="privacidade" checked={aceitaPrivacidade} onChange={e=>setAceitaPrivacidade(e.target.checked)} style={{marginTop:'2px',accentColor:'var(--grafite)',flexShrink:0,width:'16px',height:'16px'}} />
                 <label htmlFor="privacidade" style={{fontSize:'12px',color:'var(--texto)',lineHeight:1.7,cursor:'pointer'}}>
                   Li e aceito a <span style={{color:'var(--madeira)',cursor:'pointer',borderBottom:'1px solid var(--champanhe)'}} onClick={e=>{e.preventDefault();setMostraPrivacidade(true)}}>Política de Privacidade</span>. <span style={{color:'var(--erro)'}}>*</span>
                 </label>
               </div>
-
               <div style={{display:'flex',alignItems:'flex-start',gap:'12px',marginBottom:'1.5rem'}}>
                 <input type="checkbox" id="saude" checked={aceitaSaude} onChange={e=>setAceitaSaude(e.target.checked)} style={{marginTop:'2px',accentColor:'var(--grafite)',flexShrink:0,width:'16px',height:'16px'}} />
                 <label htmlFor="saude" style={{fontSize:'12px',color:'var(--texto)',lineHeight:1.7,cursor:'pointer'}}>
                   Consinto o tratamento dos meus dados de saúde para personalização das aulas. <span style={{color:'var(--texto-muted)'}}>(opcional)</span>
                 </label>
               </div>
-
               <div className="notif" style={{marginBottom:'1rem'}}>
-                <span style={{fontSize:'12px'}}>A sua inscrição será analisada pela nossa equipa. Será contactada assim que for validada.</span>
+                <span style={{fontSize:'12px'}}>A sua inscrição será analisada pela nossa equipa. Será contactado assim que for validada.</span>
               </div>
-
               <div style={{display:'flex',gap:'8px'}}>
                 <button className="btn btn-full" style={{marginTop:0}} onClick={()=>setPasso(3)}>Voltar</button>
                 <button className="btn btn-primary btn-full" style={{marginTop:0}}
@@ -388,7 +373,6 @@ export default function Registo() {
             </>
           )}
 
-          {/* PASSO 5 — Confirmação */}
           {passo === 5 && (
             <>
               <div style={{textAlign:'center',padding:'1rem 0 2rem'}}>
