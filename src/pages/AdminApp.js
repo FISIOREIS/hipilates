@@ -39,6 +39,7 @@ export default function AdminApp() {
   const [novoProfessor, setNovoProfessor] = useState({nome:'',email:''})
   const [respostaMensagem, setRespostaMensagem] = useState('')
   const [aniversariosHoje, setAniversariosHoje] = useState([])
+  const [edicaoCliente, setEdicaoCliente] = useState(null)
 
   useEffect(()=>{ if(tab==='hoje') { carregarHoje(); carregarAniversarios() } },[tab])
   useEffect(()=>{ if(tab==='inscricoes') { carregarPendentes(); carregarClientes(); carregarAulas(); carregarProfessores() } },[tab])
@@ -139,36 +140,71 @@ export default function AdminApp() {
     setMensagens(data||[])
   }
 
-  async function validarInscricao(clienteId, aulaId) {
-    const hoje = new Date().toISOString().split('T')[0]
-    await supabase.from('profiles').update({ estado: 'ativo', data_inicio: hoje, turma_id: aulaId }).eq('id', clienteId)
+  async function gerarSessoesEMarcacoes(clienteId, aulaId) {
     const aula = aulas.find(a => a.id === aulaId)
-    if (aula) {
-      const datas = []
-      let d = new Date()
-      for (let i = 0; i < 56; i++) {
-        if (d.getDay() === aula.dia_semana) datas.push(d.toISOString().split('T')[0])
-        d.setDate(d.getDate() + 1)
+    if (!aula) return null
+    const datas = []
+    let d = new Date()
+    for (let i = 0; i < 56; i++) {
+      if (d.getDay() === aula.dia_semana) datas.push(d.toISOString().split('T')[0])
+      d.setDate(d.getDate() + 1)
+    }
+    for (const data of datas) {
+      let { data: sessao } = await supabase.from('sessoes').select('id').eq('aula_id', aulaId).eq('data', data).maybeSingle()
+      if (!sessao) {
+        const { data: nova } = await supabase.from('sessoes').insert({ aula_id: aulaId, data }).select().single()
+        sessao = nova
       }
-      for (const data of datas) {
-        let { data: sessao } = await supabase.from('sessoes').select('id').eq('aula_id', aulaId).eq('data', data).maybeSingle()
-        if (!sessao) {
-          const { data: nova } = await supabase.from('sessoes').insert({ aula_id: aulaId, data }).select().single()
-          sessao = nova
-        }
-        if (sessao) {
-          await supabase.from('marcacoes').upsert({ sessao_id: sessao.id, cliente_id: clienteId, estado: 'confirmada', tipo: 'regular' }, { onConflict: 'sessao_id,cliente_id' })
-        }
+      if (sessao) {
+        await supabase.from('marcacoes').upsert({ sessao_id: sessao.id, cliente_id: clienteId, estado: 'confirmada', tipo: 'regular' }, { onConflict: 'sessao_id,cliente_id' })
       }
     }
+    return aula
+  }
+
+  // aulaIds: array com 1 ou 2 ids de aulas (2 para plano 2x_semana)
+  async function validarInscricao(clienteId, aulaIds) {
+    const hoje = new Date().toISOString().split('T')[0]
+    const [aulaId1, aulaId2] = aulaIds
+    await supabase.from('profiles').update({
+      estado: 'ativo', data_inicio: hoje, turma_id: aulaId1 || null, turma2_id: aulaId2 || null
+    }).eq('id', clienteId)
+
+    const aula1 = aulaId1 ? await gerarSessoesEMarcacoes(clienteId, aulaId1) : null
+    const aula2 = aulaId2 ? await gerarSessoesEMarcacoes(clienteId, aulaId2) : null
+
+    const turmasTexto = [aula1, aula2].filter(Boolean)
+      .map(a => `${DIAS_SEMANA[a.dia_semana]} às ${a.hora?.slice(0,5)}`).join(' e ')
+
     await supabase.from('notificacoes').insert({
       cliente_id: clienteId,
       titulo: 'Inscrição validada!',
-      mensagem: `A sua inscrição foi aprovada. ${aula ? `A sua turma é ${DIAS_SEMANA[aula.dia_semana]} às ${aula.hora?.slice(0,5)}.` : ''} Proceda ao pagamento da taxa de inscrição (10€).`,
+      mensagem: `A sua inscrição foi aprovada. ${turmasTexto ? `A sua turma é ${turmasTexto}.` : ''} Proceda ao pagamento da taxa de inscrição (10€).`,
       tipo: 'sucesso'
     })
-    mostrarNotif('Inscrição validada e turma atribuída!'); setModal(null)
+    mostrarNotif('Inscrição validada e turma(s) atribuída(s)!'); setModal(null)
     carregarPendentes(); carregarClientes()
+  }
+
+  async function eliminarCliente(clienteId) {
+    if (!window.confirm('Tem a certeza que quer eliminar este cliente? Esta ação é irreversível e remove todo o histórico associado.')) return
+    const { error } = await supabase.from('profiles').delete().eq('id', clienteId)
+    if (error) { mostrarNotif('Erro ao eliminar: ' + error.message); return }
+    mostrarNotif('Cliente eliminado.'); setModal(null)
+    carregarPendentes(); carregarClientes()
+  }
+
+  async function guardarEdicaoCliente(clienteId, dados) {
+    const update = {
+      plano: dados.plano,
+      turma_id: dados.turma_id || null,
+      turma2_id: dados.plano === '2x_semana' ? (dados.turma2_id || null) : null,
+      creditos: dados.creditos
+    }
+    const { error } = await supabase.from('profiles').update(update).eq('id', clienteId)
+    if (error) { mostrarNotif('Erro ao guardar: ' + error.message); return }
+    mostrarNotif('Cliente atualizado.'); setModal(null)
+    carregarClientes()
   }
 
   async function rejeitarInscricao(clienteId) {
@@ -401,19 +437,35 @@ export default function AdminApp() {
                     {c.acompanhante_nome && <div className="modal-row"><span className="modal-label">Acompanhante</span><span style={{fontSize:'11px'}}>{c.acompanhante_nome} · {c.acompanhante_contacto}</span></div>}
                     <div className="divider" />
                     <div className="form-group" style={{marginBottom:'10px'}}>
-                      <label className="form-label">Atribuir turma</label>
+                      <label className="form-label">Atribuir turma{c.plano==='2x_semana'?' (1ª aula)':''}</label>
                       <select className="form-select" id={`turma-${c.id}`}>
                         <option value="">Selecione uma turma...</option>
                         {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
                       </select>
                     </div>
+                    {c.plano==='2x_semana' && (
+                      <div className="form-group" style={{marginBottom:'10px'}}>
+                        <label className="form-label">Atribuir turma (2ª aula)</label>
+                        <select className="form-select" id={`turma2-${c.id}`}>
+                          <option value="">Selecione uma turma...</option>
+                          {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
+                        </select>
+                      </div>
+                    )}
                     <div style={{display:'flex',gap:'8px'}}>
                       <button className="btn btn-danger btn-full" style={{marginTop:0}} onClick={()=>rejeitarInscricao(c.id)}>Rejeitar</button>
                       <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>{
                         const sel = document.getElementById(`turma-${c.id}`)
                         if (!sel.value) { alert('Selecione uma turma primeiro.'); return }
-                        validarInscricao(c.id, sel.value)
-                      }}>Validar + turma</button>
+                        const aulaIds = [sel.value]
+                        if (c.plano==='2x_semana') {
+                          const sel2 = document.getElementById(`turma2-${c.id}`)
+                          if (!sel2.value) { alert('Selecione a 2ª turma.'); return }
+                          if (sel2.value === sel.value) { alert('As duas turmas devem ser diferentes.'); return }
+                          aulaIds.push(sel2.value)
+                        }
+                        validarInscricao(c.id, aulaIds)
+                      }}>Validar + turma{c.plano==='2x_semana'?'s':''}</button>
                     </div>
                   </div>
                 ))}
@@ -423,7 +475,7 @@ export default function AdminApp() {
             <div className="section-title">Clientes ativos ({clientes.length})</div>
             <div className="card">
               {clientes.map(c => (
-                <div key={c.id} className="cliente-row" style={{cursor:'pointer'}} onClick={()=>setModal({tipo:'cliente',dados:c})}>
+                <div key={c.id} className="cliente-row" style={{cursor:'pointer'}} onClick={()=>{setModal({tipo:'cliente',dados:c}); setEdicaoCliente({plano:c.plano, turma_id:c.turma_id||'', turma2_id:c.turma2_id||'', creditos:c.creditos})}}>
                   <div className="cliente-av">{c.nome?.slice(0,2).toUpperCase()}</div>
                   <div className="cliente-info">
                     <div className="cliente-nome">{c.nome}</div>
@@ -676,8 +728,6 @@ export default function AdminApp() {
             <div className="modal-aula">
               <div className="modal-row"><span className="modal-label">Telemóvel</span><span>{modal.dados.telemovel||'—'}</span></div>
               <div className="modal-row"><span className="modal-label">NIF</span><span>{modal.dados.nif||'—'}</span></div>
-              <div className="modal-row"><span className="modal-label">Plano</span><span style={{fontWeight:500}}>{planoLabel[modal.dados.plano]||modal.dados.plano}</span></div>
-              <div className="modal-row"><span className="modal-label">Créditos</span><span style={{color:'var(--madeira)',fontWeight:600}}>{modal.dados.creditos}</span></div>
               {modal.dados.morada && <div className="modal-row"><span className="modal-label">Morada</span><span style={{fontSize:'12px',textAlign:'right',maxWidth:'200px'}}>{modal.dados.morada}</span></div>}
               {modal.dados.localidade && <div className="modal-row"><span className="modal-label">Localidade</span><span>{modal.dados.codigo_postal} {modal.dados.localidade}</span></div>}
               {modal.dados.data_nascimento && <div className="modal-row"><span className="modal-label">Nascimento</span><span>{new Date(modal.dados.data_nascimento).toLocaleDateString('pt-PT')}</span></div>}
@@ -686,7 +736,46 @@ export default function AdminApp() {
               {modal.dados.problemas_fisicos && <div className="modal-row"><span className="modal-label">Problemas</span><span style={{fontSize:'11px',color:'var(--erro)',textAlign:'right',maxWidth:'180px'}}>{modal.dados.problemas_fisicos}</span></div>}
               {modal.dados.acompanhante_nome && <div className="modal-row"><span className="modal-label">Acompanhante</span><span style={{fontSize:'11px'}}>{modal.dados.acompanhante_nome}</span></div>}
             </div>
-            <button className="btn btn-full" style={{marginTop:'1rem'}} onClick={()=>setModal(null)}>Fechar</button>
+
+            <div className="divider" />
+            <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'10px',fontWeight:600}}>Editar inscrição</div>
+
+            <div className="form-group" style={{marginBottom:'10px'}}>
+              <label className="form-label">Plano</label>
+              <select className="form-select" value={edicaoCliente?.plano||''} onChange={e=>setEdicaoCliente(ed=>({...ed, plano:e.target.value}))}>
+                <option value="1x_semana">1× Semana</option>
+                <option value="2x_semana">2× Semana</option>
+                <option value="duo">Duo</option>
+                <option value="individual">Individual</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{marginBottom:'10px'}}>
+              <label className="form-label">Turma{edicaoCliente?.plano==='2x_semana'?' (1ª aula)':''}</label>
+              <select className="form-select" value={edicaoCliente?.turma_id||''} onChange={e=>setEdicaoCliente(ed=>({...ed, turma_id:e.target.value}))}>
+                <option value="">— sem turma —</option>
+                {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
+              </select>
+            </div>
+
+            {edicaoCliente?.plano==='2x_semana' && (
+              <div className="form-group" style={{marginBottom:'10px'}}>
+                <label className="form-label">Turma (2ª aula)</label>
+                <select className="form-select" value={edicaoCliente?.turma2_id||''} onChange={e=>setEdicaoCliente(ed=>({...ed, turma2_id:e.target.value}))}>
+                  <option value="">— sem turma —</option>
+                  {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
+                </select>
+              </div>
+            )}
+
+            <div className="form-group" style={{marginBottom:'10px'}}>
+              <label className="form-label">Créditos</label>
+              <input type="number" className="form-input" value={edicaoCliente?.creditos??0} onChange={e=>setEdicaoCliente(ed=>({...ed, creditos:parseInt(e.target.value)||0}))} />
+            </div>
+
+            <button className="btn btn-primary btn-full" style={{marginTop:'0.5rem'}} onClick={()=>guardarEdicaoCliente(modal.dados.id, edicaoCliente)}>Guardar alterações</button>
+            <button className="btn btn-danger btn-full" style={{marginTop:'0.5rem'}} onClick={()=>eliminarCliente(modal.dados.id)}>Eliminar cliente</button>
+            <button className="btn btn-full" style={{marginTop:'0.5rem'}} onClick={()=>setModal(null)}>Fechar</button>
           </div>
         </div>
       )}
