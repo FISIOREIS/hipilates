@@ -274,17 +274,6 @@ export default function ClienteApp() {
         <p style={{fontSize:'13px',color:'var(--texto-muted)',lineHeight:1.8,marginBottom:'2rem'}}>
           A sua inscrição está a ser analisada.<br/>Será contactada assim que for validada.
         </p>
-        <div className="card" style={{textAlign:'left'}}>
-          <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'14px',fontWeight:600}}>Após validação, efetue o pagamento</div>
-          <div className="modal-row"><span className="modal-label">Taxa de inscrição</span><span style={{fontWeight:600}}>10€</span></div>
-          <div className="modal-row"><span className="modal-label">Inclui</span><span style={{fontSize:'12px'}}>Seguro desportivo (12 meses)</span></div>
-          <div className="divider" />
-          <div style={{fontSize:'9px',letterSpacing:'2px',color:'var(--madeira)',marginBottom:'8px',fontWeight:600,textTransform:'uppercase'}}>MB Way</div>
-          <div style={{fontSize:'18px',fontWeight:600,marginBottom:'14px',color:'var(--grafite)'}}>913 197 254</div>
-          <div style={{fontSize:'9px',letterSpacing:'2px',color:'var(--madeira)',marginBottom:'8px',fontWeight:600,textTransform:'uppercase'}}>Transferência bancária</div>
-          <div style={{fontSize:'13px'}}>PT50 0033 0000 45655 44900505</div>
-          <div style={{fontSize:'11px',color:'var(--texto-muted)',marginTop:'4px'}}>António Valente Reis UNIP LDA</div>
-        </div>
       </div>
     </div>
   )
