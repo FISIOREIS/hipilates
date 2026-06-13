@@ -13,7 +13,7 @@ const FOTOS = [
 ]
 
 const PLANOS = [
-  { nome: '1× Semana', preco: '15€', sub: 'por aula', extra: '60€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã\nAcresce taxa de inscrição: 10€ (inclui seguro desportivo anual)', destaque: true },
+  { nome: '1× Semana', preco: '15€', sub: 'por aula', extra: '60€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã', destaque: true },
   { nome: '2× Semana', preco: '12,50€', sub: 'por aula', extra: '100€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nMáxima evolução', destaque: false },
   { nome: 'Duo', preco: '30€', sub: 'por aula / pessoa', extra: 'Pack 10 aulas: 250€/pessoa', desc: 'Sessão para 2 pessoas\nHorários de manhã e tarde\nMais personalizado', destaque: false },
   { nome: 'Individual', preco: '45€', sub: 'por aula', extra: 'Pack 10 aulas: 400€', desc: 'Sessão 100% personalizada\nHorários de manhã e tarde\nAcompanhamento dedicado', destaque: false },
@@ -80,7 +80,7 @@ export default function Landing() {
             Hipilates
           </h1>
           <p style={{fontSize:'clamp(12px,2vw,14px)',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.8)',marginBottom:'0.5rem',fontWeight:400}}>
-            by fisioreis studio
+            by fisioreis
           </p>
           <p style={{fontSize:'clamp(14px,2.5vw,18px)',color:'rgba(255,255,255,0.9)',marginBottom:'2.5rem',fontWeight:300,letterSpacing:'0.5px',maxWidth:'500px',lineHeight:1.7}}>
             Ambientes que acolhem.<br/>Cuidados que fazem sentido.
@@ -108,7 +108,7 @@ export default function Landing() {
           Um lugar onde o movimento<br/>encontra o bem-estar
         </h2>
         <p style={{fontSize:'15px',color:'#8a7060',lineHeight:1.9,fontWeight:300,marginBottom:'1.5rem'}}>
-          O Hipilates é um espaço clínico dedicado ao Pilates, integrado na FISIOREIS. Cada sessão é pensada para o corpo do utente, com turmas reduzidas e acompanhamento personalizado por profissionais de saúde.
+          O Hipilates é um espaço clínico dedicado ao Pilates Clínico, integrado na FISIOREIS. Cada sessão é pensada para o corpo do utente, com turmas reduzidas e acompanhamento personalizado por profissionais de saúde.
         </p>
         <p style={{fontSize:'15px',color:'#8a7060',lineHeight:1.9,fontWeight:300}}>
           Um ambiente sereno, materiais de excelência e uma equipa dedicada — essa é a experiência Hipilates.
@@ -205,7 +205,7 @@ export default function Landing() {
       <div style={{background:'#2a2420',padding:'2rem 1.5rem',textAlign:'center'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',marginBottom:'1rem'}}>
           <LogoSVG color='rgba(255,255,255,0.5)' size={18} />
-          <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>Hipilates · by fisioreis studio</span>
+          <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>Hipilates · by fisioreis</span>
         </div>
         <p style={{fontSize:'11px',color:'rgba(255,255,255,0.3)',letterSpacing:'0.5px'}}>© 2026 Hipilates. Todos os direitos reservados.</p>
       </div>
