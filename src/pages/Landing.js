@@ -69,7 +69,9 @@ export default function Landing() {
           <div key={i} style={{
             position:'absolute',inset:0,
             backgroundImage:`url(${f})`,
-            backgroundSize:'cover',backgroundPosition:'center 30%',backgroundRepeat:'no-repeat',
+            backgroundSize:'cover',
+            backgroundPosition:'center center',
+            backgroundRepeat:'no-repeat',
             opacity: i === fotoAtual ? 1 : 0,
             transition:'opacity 1.2s ease',
           }} />
@@ -120,10 +122,10 @@ export default function Landing() {
 
       {/* GALERIA */}
       <div style={{padding:'0 0 5rem',overflow:'hidden'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'4px',maxWidth:'600px',margin:'0 auto',padding:'0 1rem'}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'4px',maxWidth:'600px',margin:'0 auto',padding:'0 1rem'}}>
           {FOTOS.map((f,i) => (
-            <div key={i} style={{aspectRatio:'1',overflow:'hidden',borderRadius:'2px'}}>
-              <img src={f} alt="" style={{width:'100%',height:'100%',objectFit:'cover',transition:'transform 0.4s'}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'} />
+            <div key={i} style={{aspectRatio:'4/3',overflow:'hidden',borderRadius:'2px'}}>
+              <img src={f} alt="" style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',transition:'transform 0.4s'}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'} />
             </div>
           ))}
         </div>
