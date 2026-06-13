@@ -61,12 +61,13 @@ export default function Landing() {
       </nav>
 
       {/* HERO */}
-      <div style={{position:'relative',height:'100vh',overflow:'hidden'}}>
+      <div style={{position:'relative',height:'70vh',minHeight:'420px',overflow:'hidden'}}>
         {FOTOS.map((f, i) => (
           <div key={i} style={{
             position:'absolute',inset:0,
             backgroundImage:`url(${f})`,
-            backgroundSize:'cover',backgroundPosition:'center',
+            backgroundSize:'contain',backgroundPosition:'center',backgroundRepeat:'no-repeat',
+            backgroundColor:'#1a1714',
             opacity: i === fotoAtual ? 1 : 0,
             transition:'opacity 1.2s ease',
           }} />
