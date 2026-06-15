@@ -3,21 +3,18 @@ import { Link } from 'react-router-dom'
 
 const BASE = 'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/'
 const FOTOS = [
-  BASE + '1',
-  BASE + '2',
-  BASE + '3',
-  BASE + '4',
-  BASE + '5',
-  BASE + '6',
-  BASE + '7',
-  BASE + '8',
-  BASE + '9',
-  BASE + '10',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.34.jpeg',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35.jpeg',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35%20(1).jpeg',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35%20(2).jpeg',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.36.jpeg',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.36%20(1).jpeg',
+  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.37.jpeg',
 ]
 
 const PLANOS = [
-  { nome: '1× Semana', preco: '15€', sub: 'por aula', extra: '60€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã', destaque: true },
-  { nome: '2× Semana', preco: '12,50€', sub: 'por aula', extra: '100€/mês', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nMáxima evolução', destaque: false },
+  { nome: '1× Semana', preco: '55€', sub: 'por mês', extra: '', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã', destaque: true },
+  { nome: '2× Semana', preco: '90€', sub: 'por mês', extra: '', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nMáxima evolução', destaque: false },
   { nome: 'Duo', preco: '30€', sub: 'por aula / pessoa', extra: 'Pack 10 aulas: 250€/pessoa', desc: 'Sessão para 2 pessoas\nHorários de manhã e tarde\nMais personalizado', destaque: false },
   { nome: 'Individual', preco: '45€', sub: 'por aula', extra: 'Pack 10 aulas: 400€', desc: 'Sessão 100% personalizada\nHorários de manhã e tarde\nAcompanhamento dedicado', destaque: false },
 ]
@@ -64,14 +61,12 @@ export default function Landing() {
       </nav>
 
       {/* HERO */}
-      <div style={{position:'relative',height:'75vh',minHeight:'420px',overflow:'hidden'}}>
+      <div style={{position:'relative',height:'100vh',overflow:'hidden'}}>
         {FOTOS.map((f, i) => (
           <div key={i} style={{
             position:'absolute',inset:0,
             backgroundImage:`url(${f})`,
-            backgroundSize:'cover',
-            backgroundPosition:'center center',
-            backgroundRepeat:'no-repeat',
+            backgroundSize:'cover',backgroundPosition:'center',
             opacity: i === fotoAtual ? 1 : 0,
             transition:'opacity 1.2s ease',
           }} />
@@ -122,10 +117,10 @@ export default function Landing() {
 
       {/* GALERIA */}
       <div style={{padding:'0 0 5rem',overflow:'hidden'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'4px',maxWidth:'600px',margin:'0 auto',padding:'0 1rem'}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'4px',maxWidth:'600px',margin:'0 auto',padding:'0 1rem'}}>
           {FOTOS.map((f,i) => (
-            <div key={i} style={{aspectRatio:'4/3',overflow:'hidden',borderRadius:'2px'}}>
-              <img src={f} alt="" style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',transition:'transform 0.4s'}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'} />
+            <div key={i} style={{aspectRatio:'1',overflow:'hidden',borderRadius:'2px'}}>
+              <img src={f} alt="" style={{width:'100%',height:'100%',objectFit:'cover',transition:'transform 0.4s'}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'} />
             </div>
           ))}
         </div>
