@@ -81,6 +81,7 @@ export default function Registo() {
   const [medicacaoDesc, setMedicacaoDesc] = useState('')
   const [gravidez, setGravidez] = useState(false)
   const [horariosPref, setHorariosPref] = useState([])
+  const [horariosPorDia, setHorariosPorDia] = useState({})
   const [disponibilidadeLivre, setDisponibilidadeLivre] = useState('')
   const [aceitaPrivacidade, setAceitaPrivacidade] = useState(false)
   const [aceitaSaude, setAceitaSaude] = useState(false)
@@ -96,8 +97,8 @@ export default function Registo() {
 
   const planoSelecionado = PLANOS.find(p => p.id === form.plano)
   const diasDisponiveis = form.plano === '1x_semana'
-    ? [...DIAS_SEMANA, 'Sáb']
-    : DIAS_SEMANA
+    ? ['Seg','Ter','Qua','Qui','Sex','Sáb']
+    : ['Seg','Ter','Qua','Qui','Sex']
 
   async function registar() {
     if (!aceitaPrivacidade) { setErro('Por favor aceite a Política de Privacidade.'); return }
@@ -121,6 +122,7 @@ export default function Registo() {
         medicacao, medicacao_descricao: medicacaoDesc,
         gravidez, horarios_preferidos: horariosPref,
         disponibilidade_livre: disponibilidadeLivre || null,
+        horarios_por_dia: horariosPorDia || null,
         acompanhante_nome: form.acompanhante,
         acompanhante_contacto: form.acompanhanteContacto,
         estado: 'pendente'
@@ -313,52 +315,79 @@ export default function Registo() {
           {/* PASSO 3 — Horários */}
           {passo === 3 && (
             <>
-              {(form.plano === 'duo' || form.plano === 'individual') ? (
-                <>
-                  <div className="notif" style={{marginBottom:'1.25rem'}}>
-                    <span>As sessões de {form.plano === 'duo' ? 'Duo' : 'Individual'} são agendadas de forma flexível com a nossa equipa, de acordo com a sua disponibilidade semanal. As aulas decorrem entre as 08h e as 16h.</span>
-                  </div>
-                  <div className="ficha-section">
-                    <div className="ficha-section-title">Dias preferidos</div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:'2px',marginBottom:'1rem'}}>
-                      {DIAS_SEMANA.map(dia => (
-                        <span key={dia} className={`horario-chip ${horariosPref.includes(dia)?'selected':''}`}
-                          onClick={()=>toggleArr(horariosPref,setHorariosPref,dia)}>{dia}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Descreva a sua disponibilidade</label>
-                    <textarea className="form-textarea" value={disponibilidadeLivre}
-                      onChange={e=>setDisponibilidadeLivre(e.target.value)}
-                      placeholder="Ex: Prefiro de manhã, entre as 9h e as 12h. Às quartas posso também à tarde. Semanas alternadas posso variar o horário." />
-                    <p style={{fontSize:'11px',color:'var(--texto-muted)',marginTop:'6px',lineHeight:1.6}}>
-                      A nossa equipa entrará em contacto para confirmar as datas e horas de cada sessão.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="notif" style={{marginBottom:'1.25rem'}}>
-                    <span>Selecione os horários em que prefere fazer as suas aulas. Iremos atribuir uma turma com base nas suas preferências.</span>
-                  </div>
-                  {diasDisponiveis.map((dia) => {
-                    const horas = getHorasPermitidas(form.plano, dia)
-                    if (!horas.length) return null
-                    return (
-                      <div key={dia} style={{marginBottom:'1rem'}}>
-                        <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'8px',fontWeight:600}}>{dia}</div>
-                        <div style={{display:'flex',flexWrap:'wrap'}}>
-                          {horas.map(h => {
-                            const key = `${dia}-${h}`
-                            return <span key={key} className={`horario-chip ${horariosPref.includes(key)?'selected':''}`} onClick={()=>toggleArr(horariosPref,setHorariosPref,key)}>{h}</span>
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </>
+              {(form.plano === 'duo' || form.plano === 'individual') && (
+                <div className="notif" style={{marginBottom:'1.25rem'}}>
+                  <span>As sessões são agendadas de forma flexível entre as 08h e as 16h, de segunda-feira a sexta-feira.</span>
+                </div>
               )}
+              {(form.plano === '1x_semana' || form.plano === '2x_semana') && (
+                <div className="notif" style={{marginBottom:'1.25rem'}}>
+                  <span>Selecione os horários preferidos para cada dia. Iremos atribuir uma turma com base nas preferências.</span>
+                </div>
+              )}
+
+              <div className="ficha-section">
+                <div className="ficha-section-title">Dias preferidos</div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'1rem'}}>
+                  {diasDisponiveis.map(dia => (
+                    <span key={dia}
+                      className={`horario-chip ${horariosPorDia[dia]?'selected':''}`}
+                      onClick={()=>{
+                        const novo = {...horariosPorDia}
+                        if (novo[dia]) delete novo[dia]
+                        else novo[dia] = {periodo:null, horas:[]}
+                        setHorariosPorDia(novo)
+                      }}>{dia}</span>
+                  ))}
+                </div>
+              </div>
+
+              {diasDisponiveis.filter(d => horariosPorDia[d]).map(dia => {
+                const isSab = dia === 'Sáb'
+                const dObj = horariosPorDia[dia]
+                const horasManha = ['08:00','09:00','10:00','11:00','12:00']
+                const horasTarde = form.plano === '1x_semana'
+                  ? ['13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00']
+                  : ['13:00','14:00','15:00','16:00']
+                const horasSab = ['08:00','09:00','10:00','11:00','12:00','13:00']
+                const nomesDia = {Seg:'Segunda-feira',Ter:'Terça-feira',Qua:'Quarta-feira',Qui:'Quinta-feira',Sex:'Sexta-feira','Sáb':'Sábado'}
+                return (
+                  <div key={dia} style={{border:'0.5px solid var(--borda)',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+                    <div style={{fontSize:'11px',fontWeight:600,color:'var(--grafite)',marginBottom:'10px'}}>{nomesDia[dia]}</div>
+                    {!isSab ? (
+                      <div style={{display:'flex',gap:'6px',marginBottom:'8px'}}>
+                        <span className={`horario-chip ${dObj.periodo==='manha'?'selected':''}`}
+                          onClick={()=>{const n={...horariosPorDia};n[dia]={periodo:dObj.periodo==='manha'?null:'manha',horas:[]};setHorariosPorDia(n)}}>Manhã</span>
+                        <span className={`horario-chip ${dObj.periodo==='tarde'?'selected':''}`}
+                          onClick={()=>{const n={...horariosPorDia};n[dia]={periodo:dObj.periodo==='tarde'?null:'tarde',horas:[]};setHorariosPorDia(n)}}>Tarde</span>
+                      </div>
+                    ) : (
+                      <div style={{marginBottom:'8px'}}>
+                        <span className="horario-chip selected" style={{pointerEvents:'none'}}>Manhã</span>
+                      </div>
+                    )}
+                    {(dObj.periodo || isSab) && (
+                      <div style={{background:'var(--areia)',borderRadius:'4px',padding:'8px',display:'flex',flexWrap:'wrap',gap:'4px'}}>
+                        {(isSab ? horasSab : dObj.periodo==='manha' ? horasManha : horasTarde).map(h => (
+                          <span key={h}
+                            className={`horario-chip ${dObj.horas.includes(h)?'selected':''}`}
+                            style={{fontSize:'11px',padding:'4px 9px'}}
+                            onClick={()=>{
+                              const n={...horariosPorDia}
+                              n[dia]={...dObj,horas:dObj.horas.includes(h)?dObj.horas.filter(x=>x!==h):[...dObj.horas,h]}
+                              setHorariosPorDia(n)
+                            }}>{h}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              <div className="form-group" style={{marginTop:'1rem'}}>
+                <label className="form-label">Observações sobre disponibilidade</label>
+                <textarea className="form-textarea" value={disponibilidadeLivre} onChange={e=>setDisponibilidadeLivre(e.target.value)} />
+              </div>
 
               <div className="divider" />
               <div className="ficha-section">
