@@ -207,6 +207,17 @@ export default function Landing() {
           <LogoSVG color='rgba(255,255,255,0.5)' size={18} />
           <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>Hipilates · by fisioreis</span>
         </div>
+        <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'1.5rem'}}>
+          <div style={{fontSize:'12px',color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
+            <span style={{color:'#a08060',fontSize:'14px'}}>📍</span> Rua Manuel Brandão, 170 · 3720-252 Oliveira de Azeméis
+          </div>
+          <div style={{fontSize:'12px',color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
+            <span style={{color:'#a08060',fontSize:'14px'}}>📞</span> 913 197 254
+          </div>
+          <div style={{fontSize:'12px',color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
+            <span style={{color:'#a08060',fontSize:'14px'}}>✉</span> geral@fisioreis.pt
+          </div>
+        </div>
         <p style={{fontSize:'11px',color:'rgba(255,255,255,0.3)',letterSpacing:'0.5px'}}>© 2026 Hipilates. Todos os direitos reservados.</p>
       </div>
 
