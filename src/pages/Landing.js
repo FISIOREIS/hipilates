@@ -16,7 +16,7 @@ const PLANOS = [
   { nome: '1× Semana', preco: '55€', sub: 'por mês', extra: 'Turma até 5 pessoas', desc: 'Acompanhamento profissional\nMáxima flexibilidade', destaque: true },
   { nome: '2× Semana', preco: '90€', sub: 'por mês', extra: 'Turma até 5 pessoas', desc: 'Acompanhamento profissional\nMáxima evolução', destaque: false },
   { nome: 'Duo', preco: '27,50€', sub: 'por aula / pessoa', extra: 'Pack 10 aulas · 275€', desc: 'Sessão para 2 pessoas\nMais personalizado\nAcompanhamento profissional', destaque: false },
-  { nome: 'Individual', preco: '40€', sub: 'por aula', extra: 'Pack 10 aulas · 400€', desc: 'Sessão 100% personalizada\nAcompanhamento dedicado\nProfissional de saúde', destaque: false },
+  { nome: 'Individual', preco: '40€', sub: 'por aula', extra: 'Pack 10 aulas · 400€', desc: 'Sessão 100% personalizada\nAcompanhamento dedicado\nAcompanhamento profissional', destaque: false },
 ]
 
 const LogoSVG = ({color='white', size=32}) => (
