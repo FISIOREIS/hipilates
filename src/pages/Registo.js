@@ -6,8 +6,8 @@ import Privacidade from './Privacidade'
 const PLANOS = [
   { id: '1x_semana', nome: '1× Semana', preco: '55€', sub: 'por mês', desc: 'Turma até 5 pessoas', horarios: ['Manhã: 08h–12h', 'Tarde: 13h–20h', 'Sábado: 08h–13h'] },
   { id: '2x_semana', nome: '2× Semana', preco: '90€', sub: 'por mês', desc: 'Turma até 5 pessoas', horarios: ['Manhã: 08h–12h', 'Tarde: 13h–16h'] },
-  { id: 'duo', nome: 'Duo', preco: '275€', sub: 'por pessoa', desc: 'Pack 10 aulas · 27,50€/aula', horarios: ['Segunda-feira a sexta-feira', '08h–16h'] },
-  { id: 'individual', nome: 'Individual', preco: '400€', sub: 'pack 10 aulas', desc: '40€ por aula', horarios: ['Segunda-feira a sexta-feira', '08h–16h'] },
+  { id: 'duo', nome: 'Duo', preco: '275€', sub: 'por pessoa', desc: 'Pack 10 aulas · 27,50€ por aula', horarios: ['Sessão para 2 pessoas', 'Mais personalizado', 'Manhã: 08h–12h', 'Tarde: 13h–16h'] },
+  { id: 'individual', nome: 'Individual', preco: '400€', sub: 'pack 10 aulas', desc: '40€ por aula', horarios: ['Sessão 100% personalizada', 'Acompanhamento dedicado', 'Manhã: 08h–12h', 'Tarde: 13h–16h'] },
 ]
 
 // Horários por plano
