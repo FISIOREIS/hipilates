@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase'
 import Privacidade from './Privacidade'
 
 const PLANOS = [
-  { id: '1x_semana', nome: '1× Semana', preco: '55€', sub: 'por mês', desc: 'Turma até 5 pessoas' },
-  { id: '2x_semana', nome: '2× Semana', preco: '90€', sub: 'por mês', desc: 'Turma até 5 pessoas' },
-  { id: 'duo', nome: 'Duo', preco: '275€', sub: 'por pessoa', desc: 'Pack 10 aulas · 27,50€/aula' },
-  { id: 'individual', nome: 'Individual', preco: '400€', sub: 'pack 10 aulas', desc: '40€ por aula' },
+  { id: '1x_semana', nome: '1× Semana', preco: '55€', sub: 'por mês', desc: 'Turma até 5 pessoas', horarios: ['Manhã: 08h–12h', 'Tarde: 13h–20h', 'Sábado: 08h–13h'] },
+  { id: '2x_semana', nome: '2× Semana', preco: '90€', sub: 'por mês', desc: 'Turma até 5 pessoas', horarios: ['Manhã: 08h–12h', 'Tarde: 13h–16h'] },
+  { id: 'duo', nome: 'Duo', preco: '275€', sub: 'por pessoa', desc: 'Pack 10 aulas · 27,50€/aula', horarios: ['Segunda-feira a sexta-feira', '08h–16h'] },
+  { id: 'individual', nome: 'Individual', preco: '400€', sub: 'pack 10 aulas', desc: '40€ por aula', horarios: ['Segunda-feira a sexta-feira', '08h–16h'] },
 ]
 
 // Horários por plano
@@ -234,6 +234,13 @@ export default function Registo() {
                     <div className="plano-preco">{p.preco}</div>
                     <div className="plano-sub">{p.sub}</div>
                     <div className="plano-desc">{p.desc}</div>
+                    {p.horarios && (
+                      <div style={{marginTop:'8px',paddingTop:'8px',borderTop:'0.5px solid rgba(160,128,96,0.2)'}}>
+                        {p.horarios.map((h,i) => (
+                          <div key={i} style={{fontSize:'10px',color:'var(--texto-muted)',lineHeight:1.7}}>· {h}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
