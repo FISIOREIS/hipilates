@@ -167,10 +167,10 @@ export default function Landing() {
           Simples, do início ao fim
         </h2>
         {[
-          { num:'01', titulo:'Inscrição online', desc:'O utente preenche o formulário de inscrição com os seus dados e preferências de horário.' },
-          { num:'02', titulo:'Validação da inscrição', desc:'A equipa analisa o pedido e atribui uma turma adequada ao perfil do utente.' },
-          { num:'03', titulo:'Confirmação', desc:'O utente recebe uma notificação na aplicação com a turma, o horário e as instruções de pagamento.' },
-          { num:'04', titulo:'Início das aulas', desc:'O utente aparece na primeira aula e é acompanhado pela equipa especializada.' },
+          { num:'01', titulo:'Inscrição online', desc:'Preencha o formulário com os seus dados e preferências de horário.' },
+          { num:'02', titulo:'Validação da inscrição', desc:'A equipa analisa o pedido e atribui uma turma adequada ao seu perfil.' },
+          { num:'03', titulo:'Confirmação', desc:'Recebe uma notificação na aplicação com a turma, o horário e as instruções de pagamento.' },
+          { num:'04', titulo:'Início das aulas', desc:'Apareça na primeira aula e seja acompanhado pela nossa equipa especializada.' },
         ].map((p,i) => (
           <div key={i} style={{display:'flex',gap:'20px',marginBottom:'2rem',alignItems:'flex-start'}}>
             <div style={{width:'44px',height:'44px',background:'#f5f0e8',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
