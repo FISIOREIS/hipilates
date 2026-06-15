@@ -3,13 +3,16 @@ import { Link } from 'react-router-dom'
 
 const BASE = 'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/'
 const FOTOS = [
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.34.jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35.jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35%20(1).jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.35%20(2).jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.36.jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.36%20(1).jpeg',
-  BASE + 'WhatsApp%20Image%202026-06-07%20at%2015.23.37.jpeg',
+  BASE + '1.jpg',
+  BASE + '2.jpg',
+  BASE + '3.jpg',
+  BASE + '4.jpg',
+  BASE + '5.jpg',
+  BASE + '6.jpg',
+  BASE + '7.jpg',
+  BASE + '8.jpg',
+  BASE + '9.jpg',
+  BASE + '10.jpg',
 ]
 
 const PLANOS = [
