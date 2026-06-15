@@ -213,19 +213,30 @@ export default function ClienteApp() {
     const mes = new Date().getMonth() + 1
     const ano = new Date().getFullYear()
     await supabase.from('avaliacoes').upsert({ cliente_id: user.id, mes, ano, nota: avaliacao.nota, comentario: avaliacao.comentario }, { onConflict: 'cliente_id,mes,ano' })
-    setAvaliacaoEnviada(true); mostrarNotif('Avaliação enviada. Obrigada!')
+    setAvaliacaoEnviada(true); mostrarNotif('Avaliação enviada. Obrigado!')
   }
 
   async function submeterBaixa() {
     const { data: { user } } = await supabase.auth.getUser()
     let url = null
     if (justificacaoFile) {
-      const { data: upload } = await supabase.storage.from('documentos').upload(`baixas/${user.id}/${Date.now()}`, justificacaoFile)
-      if (upload) url = upload.path
+      const ext = justificacaoFile.name.split('.').pop()
+      const path = `baixas/${user.id}/${Date.now()}.${ext}`
+      const { data: upload, error: uploadErr } = await supabase.storage.from('documentos').upload(path, justificacaoFile, { upsert: true })
+      if (uploadErr) { mostrarNotif('Erro ao enviar ficheiro: ' + uploadErr.message); return }
+      const { data: urlData } = supabase.storage.from('documentos').getPublicUrl(path)
+      url = urlData?.publicUrl || path
     }
     await supabase.from('baixas').insert({ cliente_id: user.id, data_inicio: new Date().toISOString().split('T')[0], justificacao_url: url, estado: 'pendente' })
     mostrarNotif('Justificação enviada.')
-    setModal(null)
+    setJustificacaoFile(null); carregarHistorico()
+  }
+
+  async function pedirAlteracaoPlano(novoPlano) {
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('pedidos_alteracao_plano').insert({ cliente_id: user.id, plano_atual: perfil.plano, plano_pedido: novoPlano, estado: 'pendente' })
+    await supabase.from('notificacoes').insert({ cliente_id: user.id, titulo: 'Pedido enviado', mensagem: `O pedido de alteração para o plano ${planoLabel[novoPlano]} foi enviado. A equipa entrará em contacto.`, tipo: 'info' })
+    mostrarNotif('Pedido de alteração enviado.'); setModal(null)
   }
 
   async function carregarMensagens() {
@@ -240,7 +251,9 @@ export default function ClienteApp() {
   async function enviarMensagem() {
     if (!novaMensagem.trim()) return
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('mensagens').insert({ de_id: user.id, mensagem: novaMensagem })
+    // Buscar o ID do admin (email da FISIOREIS) para preencher para_id
+    const { data: adminProfile } = await supabase.from('profiles').select('id').eq('role','admin').maybeSingle()
+    await supabase.from('mensagens').insert({ de_id: user.id, para_id: adminProfile?.id || null, mensagem: novaMensagem })
     setNovaMensagem(''); carregarMensagens()
   }
 
@@ -272,7 +285,7 @@ export default function ClienteApp() {
         <div style={{width:'64px',height:'64px',background:'var(--areia)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1.5rem',fontSize:'28px'}}>⏳</div>
         <div style={{fontSize:'20px',fontWeight:600,letterSpacing:'1px',marginBottom:'1rem',color:'var(--grafite)'}}>Inscrição em análise</div>
         <p style={{fontSize:'13px',color:'var(--texto-muted)',lineHeight:1.8,marginBottom:'2rem'}}>
-          A sua inscrição está a ser analisada.<br/>Será contactada assim que for validada.
+          A inscrição está a ser analisada pela equipa.<br/>Será contactado assim que for validada.
         </p>
       </div>
     </div>
@@ -393,12 +406,12 @@ export default function ClienteApp() {
                           <div>
                             <div className="aula-hora">{s.aulas?.hora?.slice(0,5)} — {s.aulas?.nome}</div>
                             <div className="aula-detalhe">
-                              {euInscrito?'Inscrita':naEspera?'Em lista de espera':vagas===0?'Sem vagas':`${vagas} vaga${vagas!==1?'s':''}`}
+                              {euInscrito?'Inscrito':naEspera?'Em lista de espera':vagas===0?'Sem vagas':`${vagas} vaga${vagas!==1?'s':''}`}
                               {s.aulas?.professores?.nome ? ` · ${s.aulas.professores.nome}` : ''}
                             </div>
                           </div>
                           <div style={{textAlign:'right'}}>
-                            {euInscrito ? <span className="badge badge-brown">inscrita</span>
+                            {euInscrito ? <span className="badge badge-brown">inscrito</span>
                               : naEspera ? <span className="badge badge-amber">espera</span>
                               : <><span className="vagas-num" style={{color:vagas===0?'var(--erro)':'var(--madeira)'}}>{vagas}</span><span style={{fontSize:'11px',color:'var(--texto-muted)'}}>vagas</span></>}
                           </div>
@@ -437,7 +450,7 @@ export default function ClienteApp() {
                   <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={enviarAvaliacao} disabled={avaliacao.nota===0}>Enviar avaliação</button>
                 </>
               )}
-              {avaliacaoEnviada && <p style={{fontSize:'12px',color:'var(--sucesso)',fontWeight:500}}>Obrigada pela sua avaliação. ✓</p>}
+              {avaliacaoEnviada && <p style={{fontSize:'12px',color:'var(--sucesso)',fontWeight:500}}>Obrigado pela avaliação. ✓</p>}
             </div>
 
             <div className="section-title">Justificação médica</div>
@@ -446,11 +459,15 @@ export default function ClienteApp() {
                 Em caso de baixa médica, submeta a justificação para compensação automática da aula.
               </p>
               <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e=>setJustificacaoFile(e.target.files[0])} style={{fontSize:'12px',marginBottom:'8px',width:'100%'}} />
-              <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={submeterBaixa}>Enviar justificação</button>
+              {justificacaoFile && <p style={{fontSize:'11px',color:'var(--madeira)',marginBottom:'8px'}}>✓ {justificacaoFile.name}</p>}
+              <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={submeterBaixa} disabled={!justificacaoFile}>Enviar justificação</button>
               {baixas.map(b => (
                 <div key={b.id} className="modal-row" style={{marginTop:'8px',paddingTop:'8px',borderTop:'0.5px solid var(--borda)'}}>
                   <span className="modal-label">{b.data_inicio}</span>
-                  <span className={`badge ${b.estado==='aprovada'?'badge-green':b.estado==='pendente'?'badge-amber':'badge-red'}`}>{b.estado}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                    {b.justificacao_url && <a href={b.justificacao_url} target="_blank" rel="noreferrer" style={{fontSize:'11px',color:'var(--madeira)'}}>ver doc</a>}
+                    <span className={`badge ${b.estado==='aprovada'?'badge-green':b.estado==='pendente'?'badge-amber':'badge-red'}`}>{b.estado}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -543,6 +560,10 @@ export default function ClienteApp() {
             )}
 
             <div className="section-title">Definições da conta</div>
+            <div className="card" style={{marginBottom:'1rem'}}>
+              <div className="modal-row"><span className="modal-label">Plano atual</span><span style={{fontWeight:500}}>{planoLabel[perfil.plano]||perfil.plano}</span></div>
+              <button className="btn btn-full" style={{marginTop:'10px'}} onClick={()=>setModal({tipo:'alterar_plano'})}>Solicitar alteração de plano</button>
+            </div>
             <ContaCliente perfil={perfil} onAtualizar={carregarPerfil} onSair={sair} />
           </>
         )}
@@ -579,7 +600,7 @@ export default function ClienteApp() {
               <>
                 <p style={{fontSize:'13px',color:'var(--texto-muted)',marginBottom:'1rem',lineHeight:1.6}}>Esta aula não tem vagas. Deseja entrar na lista de espera?</p>
                 <div className="modal-actions">
-                  <button className="btn" onClick={()=>setModal(null)}>Não, obrigada</button>
+                  <button className="btn" onClick={()=>setModal(null)}>Não, obrigado</button>
                   <button className="btn btn-primary" onClick={()=>entrarListaEspera(modal.dados)}>Lista de espera</button>
                 </div>
               </>
@@ -594,6 +615,20 @@ export default function ClienteApp() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {modal?.tipo === 'alterar_plano' && (
+        <div className="modal-bg" onClick={()=>setModal(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-title">Alterar plano</div>
+            <p style={{fontSize:'13px',color:'var(--texto-muted)',marginBottom:'1rem',lineHeight:1.6}}>Selecione o plano para o qual pretende mudar. A equipa irá confirmar a alteração.</p>
+            {['1x_semana','2x_semana','duo','individual'].filter(p=>p!==perfil?.plano).map(p => (
+              <button key={p} className="btn btn-full" style={{marginTop:'8px'}} onClick={()=>pedirAlteracaoPlano(p)}>
+                Mudar para {planoLabel[p]}
+              </button>
+            ))}
+            <button className="btn btn-full" style={{marginTop:'8px',color:'var(--texto-muted)'}} onClick={()=>setModal(null)}>Cancelar</button>
           </div>
         </div>
       )}
