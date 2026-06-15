@@ -40,11 +40,14 @@ export default function AdminApp() {
   const [respostaMensagem, setRespostaMensagem] = useState('')
   const [aniversariosHoje, setAniversariosHoje] = useState([])
   const [edicaoCliente, setEdicaoCliente] = useState(null)
+  const [pedidosAlteracao, setPedidosAlteracao] = useState([])
+  const HORAS_FLEX = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']
+  const [novasSessoes, setNovasSessoes] = useState([])
 
   useEffect(()=>{ if(tab==='hoje') { carregarHoje(); carregarAniversarios() } },[tab])
   useEffect(()=>{ if(tab==='inscricoes') { carregarPendentes(); carregarClientes(); carregarAulas(); carregarProfessores() } },[tab])
   useEffect(()=>{ if(tab==='financeiro') carregarFinanceiro() },[tab])
-  useEffect(()=>{ if(tab==='gestao') { carregarComunicados(); carregarFeriados(); carregarProfessores(); carregarListaEsperaGeral(); carregarBaixasPendentes() } },[tab])
+  useEffect(()=>{ if(tab==='gestao') { carregarComunicados(); carregarFeriados(); carregarProfessores(); carregarListaEsperaGeral(); carregarBaixasPendentes(); carregarPedidosAlteracao() } },[tab])
   useEffect(()=>{ if(tab==='avaliacoes') carregarAvaliacoes() },[tab])
   useEffect(()=>{ if(tab==='chat') carregarTodasMensagens() },[tab])
 
@@ -131,6 +134,11 @@ export default function AdminApp() {
   async function carregarBaixasPendentes() {
     const { data } = await supabase.from('baixas').select('*, profiles(nome)').eq('estado','pendente')
     setBaixasPendentes(data||[])
+  }
+
+  async function carregarPedidosAlteracao() {
+    const { data } = await supabase.from('pedidos_alteracao_plano').select('*, profiles(nome, email)').eq('estado','pendente').order('criado_em',{ascending:false})
+    setPedidosAlteracao(data||[])
   }
 
   async function carregarTodasMensagens() {
@@ -312,13 +320,41 @@ export default function AdminApp() {
 
   async function responderMensagem(clienteId) {
     if (!respostaMensagem.trim()) return
-    const { data: admin } = await supabase.auth.getUser()
-    const { data: adminProfile } = await supabase.from('profiles').select('id').eq('email', admin.user?.email).maybeSingle()
-    if (adminProfile) {
-      await supabase.from('mensagens').insert({ de_id: adminProfile.id, para_id: clienteId, mensagem: respostaMensagem })
-      await supabase.from('notificacoes').insert({ cliente_id: clienteId, titulo: 'Nova mensagem', mensagem: 'Tem uma nova mensagem do estúdio.', tipo: 'info' })
-    }
+    const { data: { user: adminUser } } = await supabase.auth.getUser()
+    const { data: adminProfile } = await supabase.from('profiles').select('id').eq('id', adminUser.id).maybeSingle()
+    const adminId = adminProfile?.id || adminUser.id
+    const { error } = await supabase.from('mensagens').insert({ de_id: adminId, para_id: clienteId, mensagem: respostaMensagem })
+    if (error) { mostrarNotif('Erro ao enviar: ' + error.message); return }
+    await supabase.from('notificacoes').insert({ cliente_id: clienteId, titulo: 'Nova mensagem', mensagem: 'Tem uma nova mensagem do estúdio.', tipo: 'info' })
     setRespostaMensagem(''); mostrarNotif('Resposta enviada.'); carregarTodasMensagens()
+  }
+
+  async function agendarSessaoFlex(clienteId, data, hora) {
+    if (!data || !hora) { mostrarNotif('Selecione data e hora.'); return }
+    const { error } = await supabase.from('marcacoes_flex').insert({ cliente_id: clienteId, data, hora, estado: 'agendada' })
+    if (error) { mostrarNotif('Erro ao agendar: ' + error.message); return }
+    await supabase.from('notificacoes').insert({
+      cliente_id: clienteId,
+      titulo: 'Sessão agendada',
+      mensagem: `A sessão foi agendada para ${new Date(data+'T00:00:00').toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long'})} às ${hora}.`,
+      tipo: 'sucesso'
+    })
+    mostrarNotif(`Sessão agendada: ${data} às ${hora}`)
+    setNovasSessoes([])
+  }
+
+  async function responderPedidoAlteracao(pedidoId, clienteId, planoPedido, aceitar, planoCustom) {
+    const planoFinal = planoCustom || planoPedido
+    await supabase.from('pedidos_alteracao_plano').update({ estado: aceitar ? 'aceite' : 'recusado' }).eq('id', pedidoId)
+    if (aceitar) {
+      await supabase.from('profiles').update({ plano: planoFinal }).eq('id', clienteId)
+      await supabase.from('notificacoes').insert({ cliente_id: clienteId, titulo: 'Plano alterado', mensagem: `O plano foi alterado para ${planoLabel[planoFinal]}.`, tipo: 'sucesso' })
+      mostrarNotif('Plano alterado com sucesso.')
+    } else {
+      await supabase.from('notificacoes').insert({ cliente_id: clienteId, titulo: 'Pedido recusado', mensagem: 'O pedido de alteração de plano não foi aprovado. Contacte o estúdio para mais informações.', tipo: 'erro' })
+      mostrarNotif('Pedido recusado.')
+    }
+    carregarPedidosAlteracao(); carregarClientes()
   }
 
   function mostrarNotif(msg) { setNotif(msg); setTimeout(()=>setNotif(''),4000) }
@@ -571,7 +607,7 @@ export default function AdminApp() {
         {/* AVALIAÇÕES */}
         {tab === 'avaliacoes' && (
           <>
-            <div className="section-title">Avaliações das clientes</div>
+            <div className="section-title">Avaliações dos utentes</div>
             {avaliacoes.length === 0
               ? <p style={{color:'var(--texto-muted)',fontSize:'13px'}}>Sem avaliações ainda.</p>
               : avaliacoes.map(a => (
@@ -596,11 +632,44 @@ export default function AdminApp() {
                 <div className="section-title">Justificações médicas ({baixasPendentes.length})</div>
                 {baixasPendentes.map(b => (
                   <div key={b.id} className="card" style={{marginBottom:'8px'}}>
-                    <div className="modal-row"><span className="modal-label">Cliente</span><span style={{fontWeight:500}}>{b.profiles?.nome}</span></div>
+                    <div className="modal-row"><span className="modal-label">Utente</span><span style={{fontWeight:500}}>{b.profiles?.nome}</span></div>
                     <div className="modal-row"><span className="modal-label">Data</span><span>{b.data_inicio}</span></div>
+                    {b.justificacao_url && (
+                      <div className="modal-row">
+                        <span className="modal-label">Documento</span>
+                        <a href={b.justificacao_url} target="_blank" rel="noreferrer" style={{fontSize:'12px',color:'var(--madeira)',fontWeight:500}}>Abrir ficheiro →</a>
+                      </div>
+                    )}
                     <div style={{display:'flex',gap:'8px',marginTop:'10px'}}>
                       <button className="btn btn-danger btn-full" style={{marginTop:0}} onClick={()=>validarBaixa(b.id,b.cliente_id,false)}>Rejeitar</button>
                       <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>validarBaixa(b.id,b.cliente_id,true)}>Aprovar + crédito</button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {pedidosAlteracao.length > 0 && (
+              <>
+                <div className="section-title">Pedidos de alteração de plano ({pedidosAlteracao.length})</div>
+                {pedidosAlteracao.map(p => (
+                  <div key={p.id} className="card" style={{marginBottom:'8px'}}>
+                    <div className="modal-row"><span className="modal-label">Utente</span><span style={{fontWeight:500}}>{p.profiles?.nome}</span></div>
+                    <div className="modal-row"><span className="modal-label">Plano atual</span><span>{planoLabel[p.plano_atual]||p.plano_atual}</span></div>
+                    <div className="modal-row"><span className="modal-label">Plano pedido</span><span style={{color:'var(--madeira)',fontWeight:500}}>{planoLabel[p.plano_pedido]||p.plano_pedido}</span></div>
+                    <div className="form-group" style={{marginTop:'10px',marginBottom:'8px'}}>
+                      <label className="form-label">Aceitar com plano diferente (opcional)</label>
+                      <select className="form-select" id={`plano-alt-${p.id}`} defaultValue="">
+                        <option value="">— mesmo plano pedido —</option>
+                        {['1x_semana','2x_semana','duo','individual'].map(pl => <option key={pl} value={pl}>{planoLabel[pl]}</option>)}
+                      </select>
+                    </div>
+                    <div style={{display:'flex',gap:'8px'}}>
+                      <button className="btn btn-danger btn-full" style={{marginTop:0}} onClick={()=>responderPedidoAlteracao(p.id,p.cliente_id,p.plano_pedido,false,null)}>Recusar</button>
+                      <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>{
+                        const sel = document.getElementById(`plano-alt-${p.id}`)
+                        responderPedidoAlteracao(p.id,p.cliente_id,p.plano_pedido,true,sel?.value||null)
+                      }}>Aceitar</button>
                     </div>
                   </div>
                 ))}
@@ -632,7 +701,7 @@ export default function AdminApp() {
               </div>
               <div className="form-group" style={{marginBottom:'8px'}}>
                 <label className="form-label">Mensagem</label>
-                <textarea className="form-textarea" value={novoComun.mensagem} onChange={e=>setNovoComun(c=>({...c,mensagem:e.target.value}))} placeholder="Mensagem para todas as clientes..." />
+                <textarea className="form-textarea" value={novoComun.mensagem} onChange={e=>setNovoComun(c=>({...c,mensagem:e.target.value}))} placeholder="Mensagem para todos os utentes..." />
               </div>
               <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={criarComunicado}>Publicar</button>
             </div>
@@ -706,7 +775,7 @@ export default function AdminApp() {
               <div className="modal-row"><span className="modal-label">Aula</span><span>{modal.dados.aulas?.nome}</span></div>
               <div className="modal-row"><span className="modal-label">Hora</span><span>{modal.dados.aulas?.hora?.slice(0,5)}</span></div>
             </div>
-            <div className="notif">Todas as clientes inscritas receberão um crédito e notificação automática.</div>
+            <div className="notif">Todos os utentes inscritos receberão um crédito e notificação automática.</div>
             <div className="modal-actions">
               <button className="btn" onClick={()=>setModal(null)}>Cancelar</button>
               <button className="btn btn-danger" onClick={()=>cancelarSessao(modal.dados.id)}>Confirmar cancelamento</button>
@@ -774,6 +843,35 @@ export default function AdminApp() {
             </div>
 
             <button className="btn btn-primary btn-full" style={{marginTop:'0.5rem'}} onClick={()=>guardarEdicaoCliente(modal.dados.id, edicaoCliente)}>Guardar alterações</button>
+
+            {(edicaoCliente?.plano === 'duo' || edicaoCliente?.plano === 'individual') && (
+              <>
+                <div className="divider" />
+                <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'10px',fontWeight:600}}>Agendar sessão</div>
+                {modal.dados.disponibilidade_livre && (
+                  <div className="notif" style={{marginBottom:'10px'}}>
+                    <span style={{fontSize:'11px'}}>Disponibilidade: <em>{modal.dados.disponibilidade_livre}</em></span>
+                  </div>
+                )}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'8px'}}>
+                  <div>
+                    <label className="form-label">Data</label>
+                    <input className="form-input" type="date" value={novasSessoes[0]?.data||''} onChange={e=>setNovasSessoes([{...novasSessoes[0], data:e.target.value}])} />
+                  </div>
+                  <div>
+                    <label className="form-label">Hora</label>
+                    <select className="form-select" value={novasSessoes[0]?.hora||''} onChange={e=>setNovasSessoes([{...novasSessoes[0], hora:e.target.value}])}>
+                      <option value="">—</option>
+                      {HORAS_FLEX.map(h => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>agendarSessaoFlex(modal.dados.id, novasSessoes[0]?.data, novasSessoes[0]?.hora)}>
+                  Agendar sessão
+                </button>
+              </>
+            )}
+
             <button className="btn btn-danger btn-full" style={{marginTop:'0.5rem'}} onClick={()=>eliminarCliente(modal.dados.id)}>Eliminar cliente</button>
             <button className="btn btn-full" style={{marginTop:'0.5rem'}} onClick={()=>setModal(null)}>Fechar</button>
           </div>
