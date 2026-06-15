@@ -582,7 +582,7 @@ export default function AdminApp() {
                     <span className="badge badge-brown">{conv.msgs.length} msg</span>
                   </div>
                   {clienteSelecionado?.id === conv.id && (
-                    <div style={{marginTop:'14px'}}>
+                    <div style={{marginTop:'14px'}} onClick={e=>e.stopPropagation()}>
                       <div style={{maxHeight:'220px',overflowY:'auto',marginBottom:'10px',display:'flex',flexDirection:'column',gap:'6px'}}>
                         {conv.msgs.slice().reverse().map(m => (
                           <div key={m.id} style={{padding:'8px 12px',background:'var(--creme)',borderRadius:'8px',fontSize:'13px',lineHeight:1.5}}>
@@ -591,10 +591,11 @@ export default function AdminApp() {
                           </div>
                         ))}
                       </div>
-                      <div style={{display:'flex',gap:'8px'}}>
+                      <div style={{display:'flex',gap:'8px'}} onClick={e=>e.stopPropagation()}>
                         <input className="form-input" value={respostaMensagem} onChange={e=>setRespostaMensagem(e.target.value)}
-                          placeholder="Responder..." onKeyDown={e=>e.key==='Enter'&&responderMensagem(conv.id)} style={{flex:1}} />
-                        <button className="btn btn-primary" onClick={()=>responderMensagem(conv.id)} style={{padding:'12px 16px'}}>→</button>
+                          placeholder="Responder..." onKeyDown={e=>e.key==='Enter'&&responderMensagem(conv.id)} style={{flex:1}}
+                          onClick={e=>e.stopPropagation()} />
+                        <button className="btn btn-primary" onClick={e=>{e.stopPropagation();responderMensagem(conv.id)}} style={{padding:'12px 16px'}}>→</button>
                       </div>
                     </div>
                   )}
