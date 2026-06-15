@@ -15,8 +15,8 @@ const FOTOS = [
 const PLANOS = [
   { nome: '1× Semana', preco: '55€', sub: 'por mês', extra: '', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nSábado de manhã', destaque: true },
   { nome: '2× Semana', preco: '90€', sub: 'por mês', extra: '', desc: 'Turma até 5 pessoas\nHorários de manhã e tarde\nMáxima evolução', destaque: false },
-  { nome: 'Duo', preco: '30€', sub: 'por aula / pessoa', extra: 'Pack 10 aulas: 250€/pessoa', desc: 'Sessão para 2 pessoas\nHorários de manhã e tarde\nMais personalizado', destaque: false },
-  { nome: 'Individual', preco: '45€', sub: 'por aula', extra: 'Pack 10 aulas: 400€', desc: 'Sessão 100% personalizada\nHorários de manhã e tarde\nAcompanhamento dedicado', destaque: false },
+  { nome: 'Duo', preco: '275€', sub: 'por pessoa', extra: 'Pack 10 aulas · 27,50€/aula', desc: 'Sessão para 2 pessoas\nHorários de manhã e tarde\nMais personalizado', destaque: false },
+  { nome: 'Individual', preco: '400€', sub: 'pack 10 aulas', extra: '40€ por aula', desc: 'Sessão 100% personalizada\nHorários de manhã e tarde\nAcompanhamento dedicado', destaque: false },
 ]
 
 const LogoSVG = ({color='white', size=32}) => (
