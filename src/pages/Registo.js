@@ -4,16 +4,15 @@ import { supabase } from '../lib/supabase'
 import Privacidade from './Privacidade'
 
 const PLANOS = [
-  { id: '1x_semana', nome: '1× Semana', preco: '60€', sub: 'por mês', desc: 'Turma até 5 pessoas' },
-  { id: '2x_semana', nome: '2× Semana', preco: '100€', sub: 'por mês', desc: 'Turma até 5 pessoas' },
-  { id: 'duo', nome: 'Duo', preco: '30€', sub: 'por aula / pessoa', desc: 'Pack 10 aulas: 250€/pessoa' },
-  { id: 'individual', nome: 'Individual', preco: '45€', sub: 'por aula', desc: 'Pack 10 aulas: 400€' },
+  { id: '1x_semana', nome: '1× Semana', preco: '55€', sub: 'por mês', desc: 'Turma até 5 pessoas' },
+  { id: '2x_semana', nome: '2× Semana', preco: '90€', sub: 'por mês', desc: 'Turma até 5 pessoas' },
+  { id: 'duo', nome: 'Duo', preco: '275€', sub: 'por pessoa', desc: 'Pack 10 aulas · 27,50€/aula' },
+  { id: 'individual', nome: 'Individual', preco: '400€', sub: 'pack 10 aulas', desc: '40€ por aula' },
 ]
 
 // Horários por plano
-const HORAS_MANHA_TARDE = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00']
-const HORAS_TARDE_NOITE = ['18:00','19:00','20:00']
-const HORAS_TODAS = [...HORAS_MANHA_TARDE, ...HORAS_TARDE_NOITE]
+const HORAS_TODAS = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00']
+const HORAS_MANHA_TARDE = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']
 const HORAS_SAB = ['08:00','09:00','10:00','11:00','12:00','13:00']
 
 const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex']
@@ -82,6 +81,7 @@ export default function Registo() {
   const [medicacaoDesc, setMedicacaoDesc] = useState('')
   const [gravidez, setGravidez] = useState(false)
   const [horariosPref, setHorariosPref] = useState([])
+  const [disponibilidadeLivre, setDisponibilidadeLivre] = useState('')
   const [aceitaPrivacidade, setAceitaPrivacidade] = useState(false)
   const [aceitaSaude, setAceitaSaude] = useState(false)
   const [leuRegulamento, setLeuRegulamento] = useState(false)
@@ -120,6 +120,7 @@ export default function Registo() {
         cirurgias, cirurgias_descricao: cirurgiasDesc,
         medicacao, medicacao_descricao: medicacaoDesc,
         gravidez, horarios_preferidos: horariosPref,
+        disponibilidade_livre: disponibilidadeLivre || null,
         acompanhante_nome: form.acompanhante,
         acompanhante_contacto: form.acompanhanteContacto,
         estado: 'pendente'
@@ -312,25 +313,52 @@ export default function Registo() {
           {/* PASSO 3 — Horários */}
           {passo === 3 && (
             <>
-              <div className="notif" style={{marginBottom:'1.25rem'}}>
-                <span>Selecione os horários em que prefere fazer as suas aulas. Iremos atribuir uma turma com base nas suas preferências.</span>
-              </div>
-
-              {diasDisponiveis.map((dia, di) => {
-                const horas = getHorasPermitidas(form.plano, dia)
-                if (!horas.length) return null
-                return (
-                  <div key={dia} style={{marginBottom:'1rem'}}>
-                    <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'8px',fontWeight:600}}>{dia}</div>
-                    <div style={{display:'flex',flexWrap:'wrap'}}>
-                      {horas.map(h => {
-                        const key = `${dia}-${h}`
-                        return <span key={key} className={`horario-chip ${horariosPref.includes(key)?'selected':''}`} onClick={()=>toggleArr(horariosPref,setHorariosPref,key)}>{h}</span>
-                      })}
+              {(form.plano === 'duo' || form.plano === 'individual') ? (
+                <>
+                  <div className="notif" style={{marginBottom:'1.25rem'}}>
+                    <span>As sessões de {form.plano === 'duo' ? 'Duo' : 'Individual'} são agendadas de forma flexível com a nossa equipa, de acordo com a sua disponibilidade semanal. As aulas decorrem entre as 08h e as 16h.</span>
+                  </div>
+                  <div className="ficha-section">
+                    <div className="ficha-section-title">Dias preferidos</div>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:'2px',marginBottom:'1rem'}}>
+                      {DIAS_SEMANA.map(dia => (
+                        <span key={dia} className={`horario-chip ${horariosPref.includes(dia)?'selected':''}`}
+                          onClick={()=>toggleArr(horariosPref,setHorariosPref,dia)}>{dia}</span>
+                      ))}
                     </div>
                   </div>
-                )
-              })}
+                  <div className="form-group">
+                    <label className="form-label">Descreva a sua disponibilidade</label>
+                    <textarea className="form-textarea" value={disponibilidadeLivre}
+                      onChange={e=>setDisponibilidadeLivre(e.target.value)}
+                      placeholder="Ex: Prefiro de manhã, entre as 9h e as 12h. Às quartas posso também à tarde. Semanas alternadas posso variar o horário." />
+                    <p style={{fontSize:'11px',color:'var(--texto-muted)',marginTop:'6px',lineHeight:1.6}}>
+                      A nossa equipa entrará em contacto para confirmar as datas e horas de cada sessão.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="notif" style={{marginBottom:'1.25rem'}}>
+                    <span>Selecione os horários em que prefere fazer as suas aulas. Iremos atribuir uma turma com base nas suas preferências.</span>
+                  </div>
+                  {diasDisponiveis.map((dia) => {
+                    const horas = getHorasPermitidas(form.plano, dia)
+                    if (!horas.length) return null
+                    return (
+                      <div key={dia} style={{marginBottom:'1rem'}}>
+                        <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'8px',fontWeight:600}}>{dia}</div>
+                        <div style={{display:'flex',flexWrap:'wrap'}}>
+                          {horas.map(h => {
+                            const key = `${dia}-${h}`
+                            return <span key={key} className={`horario-chip ${horariosPref.includes(key)?'selected':''}`} onClick={()=>toggleArr(horariosPref,setHorariosPref,key)}>{h}</span>
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
 
               <div className="divider" />
               <div className="ficha-section">
