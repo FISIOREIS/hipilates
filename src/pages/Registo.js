@@ -471,7 +471,7 @@ export default function Registo() {
               </div>
 
               <div className="notif" style={{marginBottom:'1rem'}}>
-                <span style={{fontSize:'12px'}}>A sua inscrição será analisada pela nossa equipa. Será contactada assim que for validada.</span>
+                <span style={{fontSize:'12px'}}>A sua inscrição será analisada pela nossa equipa. Será contactado assim que for validada.</span>
               </div>
 
               <div style={{display:'flex',gap:'8px'}}>
