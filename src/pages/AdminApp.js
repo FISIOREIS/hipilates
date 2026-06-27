@@ -251,6 +251,8 @@ export default function AdminApp() {
       estado: dados.estado || 'ativo',
       nome: dados.nome || undefined,
       telemovel: dados.telemovel || undefined,
+      subsistema_saude: dados.subsistema_saude || undefined,
+      subsistema_numero: dados.subsistema_numero || undefined,
     }
     const { error } = await supabase.from('profiles').update(update).eq('id', clienteId)
     if (error) { mostrarNotif('Erro ao guardar: ' + error.message); return }
@@ -976,6 +978,16 @@ export default function AdminApp() {
                 <div className="form-group" style={{marginBottom:'10px'}}>
                   <label className="form-label">Telemóvel</label>
                   <input className="form-input" value={edicaoCliente?.telemovel||modal.dados.telemovel||''} onChange={e=>setEdicaoCliente(ed=>({...ed, telemovel:e.target.value}))} />
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+                  <div className="form-group" style={{marginBottom:'10px'}}>
+                    <label className="form-label">Subsistema saúde</label>
+                    <input className="form-input" value={edicaoCliente?.subsistema_saude||modal.dados.subsistema_saude||''} onChange={e=>setEdicaoCliente(ed=>({...ed, subsistema_saude:e.target.value}))} placeholder="Ex: ADSE" />
+                  </div>
+                  <div className="form-group" style={{marginBottom:'10px'}}>
+                    <label className="form-label">Nº beneficiário</label>
+                    <input className="form-input" value={edicaoCliente?.subsistema_numero||modal.dados.subsistema_numero||''} onChange={e=>setEdicaoCliente(ed=>({...ed, subsistema_numero:e.target.value}))} placeholder="Ex: 250" />
+                  </div>
                 </div>
                 <div className="form-group" style={{marginBottom:'10px'}}>
                   <label className="form-label">Plano</label>
