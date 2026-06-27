@@ -189,7 +189,7 @@ export default function Registo() {
 
       <div style={{padding:'1.5rem 1.5rem 0'}}>
         <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'1.5rem'}}>
-          <img src="/simbolo__header_.png" alt="Hipilates" style={{height:'24px',objectFit:'contain'}} />
+          <img src="/simbolo (header).png.png" alt="Hipilates" style={{height:'24px',objectFit:'contain'}} />
           <span style={{fontSize:'16px',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',color:'var(--grafite)'}}>hipilates</span>
         </div>
         <div className="progress-bar">
