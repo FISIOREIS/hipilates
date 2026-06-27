@@ -241,12 +241,19 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
                 {verNova ? '🙈' : '👁️'}
               </span>
             </div>
-            {passwordNova && forca && (
-              <div style={{marginTop:'6px'}}>
-                <div style={{height:'4px',background:'var(--borda)',borderRadius:'2px',marginBottom:'4px'}}>
-                  <div style={{height:'100%',width:forca.width,background:forca.color,borderRadius:'2px',transition:'width 0.3s'}} />
-                </div>
-                <span style={{fontSize:'10px',color:forca.color,fontWeight:600}}>{forca.label}</span>
+            {passwordNova && (
+              <div style={{marginTop:'8px',display:'flex',flexDirection:'column',gap:'4px'}}>
+                {[
+                  { ok: passwordNova.length >= 12, label: 'Mínimo 12 caracteres' },
+                  { ok: /[A-Z]/.test(passwordNova), label: 'Uma letra maiúscula' },
+                  { ok: /[0-9]/.test(passwordNova), label: 'Um número' },
+                  { ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordNova), label: 'Um símbolo (!@#$%...)' },
+                ].map((r,i) => (
+                  <div key={i} style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:r.ok?'var(--sucesso)':'var(--texto-muted)'}}>
+                    <span style={{fontWeight:700,fontSize:'13px'}}>{r.ok ? '✓' : '✗'}</span>
+                    {r.label}
+                  </div>
+                ))}
               </div>
             )}
           </div>
