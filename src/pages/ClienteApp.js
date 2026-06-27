@@ -278,7 +278,7 @@ export default function ClienteApp() {
   if (pendente) return (
     <div className="app-wrap">
       <div className="header">
-        <div className="logo"><LogoSVG /> <span><span className="logo-hi">Hi</span>pilates</span></div>
+        <div className="logo"><img src="/simbolo__header_.png" alt="Hipilates" style={{height:'28px',objectFit:'contain'}} /> <span style={{fontSize:'15px',fontWeight:600,letterSpacing:'1px'}}>hipilates</span></div>
         <div className="user-menu" onClick={sair}>Sair</div>
       </div>
       <div className="content" style={{textAlign:'center',paddingTop:'3rem'}}>
@@ -295,7 +295,7 @@ export default function ClienteApp() {
     <div className="app-wrap">
       {notif && <div className="notif-toast">{notif}</div>}
       <div className="header">
-        <div className="logo"><LogoSVG /> <span><span className="logo-hi">Hi</span>pilates</span></div>
+        <div className="logo"><img src="/simbolo__header_.png" alt="Hipilates" style={{height:'28px',objectFit:'contain'}} /> <span style={{fontSize:'15px',fontWeight:600,letterSpacing:'1px'}}>hipilates</span></div>
         <div style={{display:'flex',alignItems:'center',gap:'14px'}}>
           {notificacoes.length > 0 && (
             <div style={{position:'relative',cursor:'pointer'}} onClick={marcarNotificacoesLidas}>
