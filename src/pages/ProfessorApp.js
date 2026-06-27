@@ -68,7 +68,7 @@ export default function ProfessorApp() {
     <div className="app-wrap">
       {notif && <div className="notif-toast">{notif}</div>}
       <div className="header">
-        <div className="logo"><LogoSVG /> <span><span className="logo-hi">Hi</span>pilates</span></div>
+        <div className="logo"><img src="/simbolo__header_.png" alt="Hipilates" style={{height:'28px',objectFit:'contain'}} /> <span style={{fontSize:'15px',fontWeight:600,letterSpacing:'1px'}}>hipilates</span></div>
         <div className="user-menu" onClick={sair}>Sair</div>
       </div>
       <div style={{background:'var(--areia)',padding:'8px 1.5rem',borderBottom:'0.5px solid var(--borda)'}}>
