@@ -48,9 +48,9 @@ export default function Landing() {
       {/* NAVBAR */}
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,background:'rgba(250,248,244,0.95)',backdropFilter:'blur(8px)',borderBottom:'0.5px solid #e8dcc8',padding:'0 1.5rem',height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-          <img src="/simbolo (header).png" alt="Hipilates" style={{height:'24px',objectFit:'contain'}} />
+          <img src="/simbolo (header).png.png" alt="Hipilates" style={{height:'24px',objectFit:'contain'}} />
           <span style={{fontSize:'16px',fontWeight:700,letterSpacing:'3px',textTransform:'uppercase',color:'#2a2420'}}>
-            <span style={{color:'#a08060'}}>Hi</span>pilates
+            hipilates
           </span>
         </div>
         <div style={{display:'flex',gap:'10px',alignItems:'center'}}>
@@ -207,8 +207,8 @@ export default function Landing() {
       {/* RODAPÉ */}
       <div style={{background:'#2a2420',padding:'2rem 1.5rem',textAlign:'center'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',marginBottom:'1rem'}}>
-          <img src="/logo-rodape.png" alt="Hipilates" style={{height:'20px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.5}} />
-          <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>Hipilates · by fisioreis</span>
+          <img src="/simbolo (header).png.png" alt="Hipilates" style={{height:'20px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.5}} />
+          <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>hipilates · by fisioreis</span>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'1.5rem'}}>
           <div style={{fontSize:'12px',color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
