@@ -29,7 +29,7 @@ export default function ListaEsperaPublica() {
   if (enviado) return (
     <div className="auth-wrap" style={{textAlign:'center'}}>
       <div style={{marginBottom:'1.5rem'}}>
-        <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
+        <img src="/logo-rodape.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
       </div>
       <div style={{fontSize:'48px',margin:'2rem 0 1rem'}}>✓</div>
       <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:'22px',marginBottom:'1rem'}}>Obrigada!</div>
@@ -44,7 +44,7 @@ export default function ListaEsperaPublica() {
   return (
     <div className="auth-wrap">
       <div style={{marginBottom:'1.5rem',textAlign:'center'}}>
-        <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
+        <img src="/logo-rodape.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
       </div>
       <p className="auth-sub">Lista de espera</p>
       <div className="card-elevated">
