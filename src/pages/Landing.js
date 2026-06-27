@@ -48,7 +48,7 @@ export default function Landing() {
       {/* NAVBAR */}
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,background:'rgba(250,248,244,0.95)',backdropFilter:'blur(8px)',borderBottom:'0.5px solid #e8dcc8',padding:'0 1.5rem',height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-          <LogoSVG color='#a08060' size={24} />
+          <img src="/simbolo__header_.png" alt="Hipilates" style={{height:'24px',objectFit:'contain'}} />
           <span style={{fontSize:'16px',fontWeight:700,letterSpacing:'3px',textTransform:'uppercase',color:'#2a2420'}}>
             <span style={{color:'#a08060'}}>Hi</span>pilates
           </span>
@@ -77,7 +77,7 @@ export default function Landing() {
         <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(42,36,32,0.2) 0%, rgba(42,36,32,0.65) 100%)'}} />
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem',textAlign:'center'}}>
           <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'1.5rem'}}>
-            <LogoSVG color='white' size={40} />
+            <img src="/texto_vertival_login.png" alt="Hipilates" style={{height:'60px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.95}} />
           </div>
           <h1 style={{fontSize:'clamp(36px,8vw,72px)',fontWeight:700,letterSpacing:'8px',textTransform:'uppercase',color:'white',marginBottom:'1rem',lineHeight:1.1}}>
             Hipilates
@@ -189,7 +189,7 @@ export default function Landing() {
 
       {/* CTA FINAL */}
       <div style={{background:'#f5f0e8',padding:'5rem 1.5rem',textAlign:'center'}}>
-        <LogoSVG color='#a08060' size={40} />
+        <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'40px',objectFit:'contain'}} />
         <h2 style={{fontSize:'clamp(22px,4vw,32px)',fontWeight:600,color:'#2a2420',margin:'1.5rem 0 1rem',lineHeight:1.3}}>
           Pronto para começar?
         </h2>
@@ -207,7 +207,7 @@ export default function Landing() {
       {/* RODAPÉ */}
       <div style={{background:'#2a2420',padding:'2rem 1.5rem',textAlign:'center'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',marginBottom:'1rem'}}>
-          <LogoSVG color='rgba(255,255,255,0.5)' size={18} />
+          <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'20px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.5}} />
           <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>Hipilates · by fisioreis</span>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'1.5rem'}}>
