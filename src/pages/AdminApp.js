@@ -87,8 +87,8 @@ export default function AdminApp() {
     setCalendarioOcupacao(ocup)
   }
 
-  async function atribuirTurmaCalendario(clienteId, aulaId) {
-    await validarInscricao(clienteId, [aulaId])
+  async function atribuirTurmaCalendario(clienteId, aulaId, nomeCliente, diaHora) {
+    setModal({ tipo: 'confirmar_turma', clienteId, aulaId, nomeCliente, diaHora })
   }
 
   async function carregarHoje() {
@@ -247,7 +247,10 @@ export default function AdminApp() {
       plano: dados.plano,
       turma_id: dados.turma_id || null,
       turma2_id: dados.plano === '2x_semana' ? (dados.turma2_id || null) : null,
-      creditos: dados.creditos
+      creditos: dados.creditos,
+      estado: dados.estado || 'ativo',
+      nome: dados.nome || undefined,
+      telemovel: dados.telemovel || undefined,
     }
     const { error } = await supabase.from('profiles').update(update).eq('id', clienteId)
     if (error) { mostrarNotif('Erro ao guardar: ' + error.message); return }
@@ -415,7 +418,7 @@ export default function AdminApp() {
     <div className="app-wrap">
       {notif && <div className="notif-toast">{notif}</div>}
       <div className="header">
-        <div className="logo"><img src="/simbolo__header_.png" alt="Hipilates" style={{height:'28px',objectFit:'contain'}} /> <span style={{fontSize:'15px',fontWeight:600,letterSpacing:'1px'}}>hipilates</span></div>
+        <a href="/" style={{display:'flex',alignItems:'center',gap:'8px',textDecoration:'none',color:'inherit'}}><img src="/simbolo (header).png.png" alt="Hipilates" style={{height:'28px',objectFit:'contain'}} /> <span style={{fontSize:'15px',fontWeight:600,letterSpacing:'1px',color:'var(--grafite)'}}>hipilates</span></a>
         <div className="user-menu" onClick={sair}>Sair</div>
       </div>
       <div style={{background:'var(--grafite)',padding:'8px 1.5rem',borderBottom:'0.5px solid var(--grafite-suave)'}}>
@@ -505,7 +508,16 @@ export default function AdminApp() {
                     <div className="modal-row"><span className="modal-label">Plano</span><span style={{fontWeight:500}}>{planoLabel[c.plano]||c.plano}</span></div>
                     <div className="modal-row"><span className="modal-label">NIF</span><span>{c.nif||'—'}</span></div>
                     {c.morada && <div className="modal-row"><span className="modal-label">Morada</span><span style={{fontSize:'12px',textAlign:'right',maxWidth:'200px'}}>{c.morada}, {c.codigo_postal} {c.localidade}</span></div>}
-                    {c.horarios_preferidos?.length > 0 && <div className="modal-row"><span className="modal-label">Horários pref.</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'180px'}}>{c.horarios_preferidos.join(', ')}</span></div>}
+                    {c.horarios_preferidos?.length > 0 && (
+                      <div className="modal-row" style={{alignItems:'flex-start'}}>
+                        <span className="modal-label">Horários pref.</span>
+                        <div style={{display:'flex',flexWrap:'wrap',gap:'4px',justifyContent:'flex-end',maxWidth:'200px'}}>
+                          {c.horarios_preferidos.map((h,i) => (
+                            <span key={i} style={{background:'var(--areia)',borderRadius:'3px',padding:'2px 6px',fontSize:'10px',color:'var(--madeira)',fontWeight:600}}>{h}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {c.objetivos && <div className="modal-row"><span className="modal-label">Objetivos</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'180px'}}>{c.objetivos}</span></div>}
                     {c.problemas_fisicos && <div className="modal-row"><span className="modal-label">Problemas</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'180px',color:'var(--erro)'}}>{c.problemas_fisicos}</span></div>}
                     {c.cirurgias && <div className="modal-row"><span className="modal-label">Cirurgias</span><span style={{fontSize:'11px',color:'var(--erro)'}}>{c.cirurgias_descricao}</span></div>}
@@ -538,7 +550,7 @@ export default function AdminApp() {
                                 return (
                                   <td key={dia} style={{padding:'3px 4px',textAlign:'center'}}>
                                     <button
-                                      onClick={()=>{ if(!cheio) atribuirTurmaCalendario(c.id, slot.id) }}
+                                      onClick={()=>{ if(!cheio) atribuirTurmaCalendario(c.id, slot.id, c.nome, `${['','Seg','Ter','Qua','Qui','Sex','Sáb'][dia]} ${hora}`) }}
                                       style={{
                                         padding:'4px 6px',
                                         borderRadius:'4px',
@@ -850,6 +862,23 @@ export default function AdminApp() {
         )}
       </div>
 
+      {modal?.tipo === 'confirmar_turma' && (
+        <div className="modal-bg" onClick={()=>setModal(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-title">Confirmar atribuição</div>
+            <div className="modal-aula">
+              <div className="modal-row"><span className="modal-label">Cliente</span><span style={{fontWeight:500}}>{modal.nomeCliente}</span></div>
+              <div className="modal-row"><span className="modal-label">Turma</span><span style={{fontWeight:500,color:'var(--madeira)'}}>{modal.diaHora}</span></div>
+            </div>
+            <div className="notif" style={{marginTop:'1rem'}}>Ao confirmar, a inscrição será validada e o cliente notificado com a turma atribuída.</div>
+            <div className="modal-actions">
+              <button className="btn" onClick={()=>setModal(null)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={()=>{ validarInscricao(modal.clienteId, [modal.aulaId]); setModal(null) }}>Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal?.tipo === 'cancelar_sessao' && (
         <div className="modal-bg" onClick={()=>setModal(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -869,93 +898,128 @@ export default function AdminApp() {
 
       {modal?.tipo === 'cliente' && (
         <div className="modal-bg" onClick={()=>setModal(null)}>
-          <div className="modal" onClick={e=>e.stopPropagation()}>
-            <div style={{display:'flex',alignItems:'center',gap:'14px',marginBottom:'1.5rem'}}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:'90vh',overflowY:'auto'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'14px',marginBottom:'1rem'}}>
               <div className="av av-lg">{modal.dados.nome?.slice(0,2).toUpperCase()}</div>
               <div>
                 <div className="modal-title" style={{marginBottom:'3px'}}>{modal.dados.nome}</div>
                 <div style={{fontSize:'12px',color:'var(--texto-muted)'}}>{modal.dados.email}</div>
               </div>
             </div>
-            <div className="modal-aula">
-              <div className="modal-row"><span className="modal-label">Telemóvel</span><span>{modal.dados.telemovel||'—'}</span></div>
-              <div className="modal-row"><span className="modal-label">NIF</span><span>{modal.dados.nif||'—'}</span></div>
-              {modal.dados.morada && <div className="modal-row"><span className="modal-label">Morada</span><span style={{fontSize:'12px',textAlign:'right',maxWidth:'200px'}}>{modal.dados.morada}</span></div>}
-              {modal.dados.localidade && <div className="modal-row"><span className="modal-label">Localidade</span><span>{modal.dados.codigo_postal} {modal.dados.localidade}</span></div>}
-              {modal.dados.data_nascimento && <div className="modal-row"><span className="modal-label">Nascimento</span><span>{new Date(modal.dados.data_nascimento).toLocaleDateString('pt-PT')}</span></div>}
-              {modal.dados.objetivos && <div className="modal-row"><span className="modal-label">Objetivos</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'180px'}}>{modal.dados.objetivos}</span></div>}
-              {modal.dados.experiencia && <div className="modal-row"><span className="modal-label">Experiência</span><span>{modal.dados.experiencia}</span></div>}
-              {modal.dados.problemas_fisicos && <div className="modal-row"><span className="modal-label">Problemas</span><span style={{fontSize:'11px',color:'var(--erro)',textAlign:'right',maxWidth:'180px'}}>{modal.dados.problemas_fisicos}</span></div>}
-              {modal.dados.acompanhante_nome && <div className="modal-row"><span className="modal-label">Acompanhante</span><span style={{fontSize:'11px'}}>{modal.dados.acompanhante_nome}</span></div>}
+
+            <div className="inner-tabs" style={{marginBottom:'1rem'}}>
+              {[['perfil','Perfil'],['saude','Saúde'],['editar','Editar']].map(([id,label]) => (
+                <div key={id} className={`inner-tab ${(edicaoCliente?.tab||'perfil')===id?'active':''}`}
+                  onClick={()=>setEdicaoCliente(ed=>({...ed, tab:id}))}>{label}</div>
+              ))}
             </div>
 
-            <div className="divider" />
-            <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'10px',fontWeight:600}}>Editar inscrição</div>
+            {(edicaoCliente?.tab||'perfil') === 'perfil' && (
+              <div className="modal-aula">
+                <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'8px',fontWeight:600}}>Dados pessoais</div>
+                <div className="modal-row"><span className="modal-label">Telemóvel</span><span>{modal.dados.telemovel||'—'}</span></div>
+                <div className="modal-row"><span className="modal-label">NIF</span><span>{modal.dados.nif||'—'}</span></div>
+                <div className="modal-row"><span className="modal-label">Nascimento</span><span>{modal.dados.data_nascimento ? new Date(modal.dados.data_nascimento).toLocaleDateString('pt-PT') : '—'}</span></div>
+                {modal.dados.morada && <div className="modal-row"><span className="modal-label">Morada</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'200px'}}>{modal.dados.morada}</span></div>}
+                {modal.dados.codigo_postal && <div className="modal-row"><span className="modal-label">Localidade</span><span>{modal.dados.codigo_postal} {modal.dados.localidade}</span></div>}
+                {modal.dados.subsistema_saude && <div className="modal-row"><span className="modal-label">Subsistema</span><span>{modal.dados.subsistema_saude}</span></div>}
+                {modal.dados.subsistema_numero && <div className="modal-row"><span className="modal-label">Nº beneficiário</span><span>{modal.dados.subsistema_numero}</span></div>}
+                {modal.dados.acompanhante_nome && <>
+                  <div className="modal-row"><span className="modal-label">Acompanhante</span><span style={{fontSize:'11px'}}>{modal.dados.acompanhante_nome}</span></div>
+                  <div className="modal-row"><span className="modal-label">Contacto ac.</span><span style={{fontSize:'11px'}}>{modal.dados.acompanhante_contacto||'—'}</span></div>
+                </>}
 
-            <div className="form-group" style={{marginBottom:'10px'}}>
-              <label className="form-label">Plano</label>
-              <select className="form-select" value={edicaoCliente?.plano||''} onChange={e=>setEdicaoCliente(ed=>({...ed, plano:e.target.value}))}>
-                <option value="1x_semana">1× Semana</option>
-                <option value="2x_semana">2× Semana</option>
-                <option value="duo">Duo</option>
-                <option value="individual">Individual</option>
-              </select>
-            </div>
+                <div className="divider" />
+                <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'8px',fontWeight:600}}>Inscrição</div>
+                <div className="modal-row"><span className="modal-label">Plano</span><span style={{fontWeight:500}}>{planoLabel[modal.dados.plano]||modal.dados.plano}</span></div>
+                <div className="modal-row"><span className="modal-label">Estado</span><span style={{fontWeight:500,color:modal.dados.estado==='ativo'?'var(--sucesso)':'var(--texto-muted)'}}>{modal.dados.estado}</span></div>
+                <div className="modal-row"><span className="modal-label">Créditos</span><span style={{color:'var(--madeira)',fontWeight:600}}>{modal.dados.creditos}</span></div>
+                {modal.dados.data_inicio && <div className="modal-row"><span className="modal-label">Início</span><span>{new Date(modal.dados.data_inicio).toLocaleDateString('pt-PT')}</span></div>}
+                <div className="modal-row"><span className="modal-label">Taxa inscr.</span><span>{modal.dados.taxa_inscricao_paga ? '✓ Paga' : '✗ Por pagar'}</span></div>
+                {modal.dados.seguro_data && <div className="modal-row"><span className="modal-label">Seguro</span><span>{new Date(modal.dados.seguro_data).toLocaleDateString('pt-PT')}</span></div>}
 
-            <div className="form-group" style={{marginBottom:'10px'}}>
-              <label className="form-label">Turma{edicaoCliente?.plano==='2x_semana'?' (1ª aula)':''}</label>
-              <select className="form-select" value={edicaoCliente?.turma_id||''} onChange={e=>setEdicaoCliente(ed=>({...ed, turma_id:e.target.value}))}>
-                <option value="">— sem turma —</option>
-                {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
-              </select>
-            </div>
-
-            {edicaoCliente?.plano==='2x_semana' && (
-              <div className="form-group" style={{marginBottom:'10px'}}>
-                <label className="form-label">Turma (2ª aula)</label>
-                <select className="form-select" value={edicaoCliente?.turma2_id||''} onChange={e=>setEdicaoCliente(ed=>({...ed, turma2_id:e.target.value}))}>
-                  <option value="">— sem turma —</option>
-                  {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
-                </select>
+                <div className="divider" />
+                <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'8px',fontWeight:600}}>Preferências</div>
+                {modal.dados.horarios_preferidos?.length > 0 ? (
+                  <div className="modal-row" style={{alignItems:'flex-start'}}>
+                    <span className="modal-label">Horários pref.</span>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:'4px',justifyContent:'flex-end',maxWidth:'200px'}}>
+                      {modal.dados.horarios_preferidos.map((h,i) => (
+                        <span key={i} style={{background:'var(--areia)',borderRadius:'3px',padding:'2px 6px',fontSize:'10px',color:'var(--madeira)',fontWeight:600}}>{h}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : <div className="modal-row"><span className="modal-label">Horários pref.</span><span>—</span></div>}
+                {modal.dados.objetivos && <div className="modal-row"><span className="modal-label">Objetivos</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'180px'}}>{modal.dados.objetivos}</span></div>}
+                {modal.dados.experiencia && <div className="modal-row"><span className="modal-label">Experiência</span><span style={{fontSize:'11px'}}>{modal.dados.experiencia}</span></div>}
               </div>
             )}
 
-            <div className="form-group" style={{marginBottom:'10px'}}>
-              <label className="form-label">Créditos</label>
-              <input type="number" className="form-input" value={edicaoCliente?.creditos??0} onChange={e=>setEdicaoCliente(ed=>({...ed, creditos:parseInt(e.target.value)||0}))} />
-            </div>
+            {(edicaoCliente?.tab||'perfil') === 'saude' && (
+              <div className="modal-aula">
+                {modal.dados.problemas_fisicos ? (
+                  <><div className="modal-row"><span className="modal-label">Problemas</span><span style={{fontSize:'11px',color:'var(--erro)',textAlign:'right',maxWidth:'180px'}}>{modal.dados.problemas_fisicos}</span></div>
+                  {modal.dados.problemas_descricao && <div className="modal-row"><span className="modal-label">Descrição</span><span style={{fontSize:'11px',textAlign:'right',maxWidth:'180px'}}>{modal.dados.problemas_descricao}</span></div>}</>
+                ) : <div className="modal-row"><span className="modal-label">Problemas</span><span>Nenhum</span></div>}
+                <div className="modal-row"><span className="modal-label">Cirurgias</span><span>{modal.dados.cirurgias ? `Sim — ${modal.dados.cirurgias_descricao||''}` : 'Não'}</span></div>
+                <div className="modal-row"><span className="modal-label">Medicação</span><span>{modal.dados.medicacao ? `Sim — ${modal.dados.medicacao_descricao||''}` : 'Não'}</span></div>
+                <div className="modal-row"><span className="modal-label">Gravidez</span><span>{modal.dados.gravidez ? 'Sim' : 'Não'}</span></div>
+              </div>
+            )}
 
-            <button className="btn btn-primary btn-full" style={{marginTop:'0.5rem'}} onClick={()=>guardarEdicaoCliente(modal.dados.id, edicaoCliente)}>Guardar alterações</button>
-
-            {(edicaoCliente?.plano === 'duo' || edicaoCliente?.plano === 'individual') && (
+            {(edicaoCliente?.tab||'perfil') === 'editar' && (
               <>
-                <div className="divider" />
-                <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'10px',fontWeight:600}}>Agendar sessão</div>
-                {modal.dados.disponibilidade_livre && (
-                  <div className="notif" style={{marginBottom:'10px'}}>
-                    <span style={{fontSize:'11px'}}>Disponibilidade: <em>{modal.dados.disponibilidade_livre}</em></span>
-                  </div>
-                )}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'8px'}}>
-                  <div>
-                    <label className="form-label">Data</label>
-                    <input className="form-input" type="date" value={novasSessoes[0]?.data||''} onChange={e=>setNovasSessoes([{...novasSessoes[0], data:e.target.value}])} />
-                  </div>
-                  <div>
-                    <label className="form-label">Hora</label>
-                    <select className="form-select" value={novasSessoes[0]?.hora||''} onChange={e=>setNovasSessoes([{...novasSessoes[0], hora:e.target.value}])}>
-                      <option value="">—</option>
-                      {HORAS_FLEX.map(h => <option key={h} value={h}>{h}</option>)}
+                <div className="form-group" style={{marginBottom:'10px'}}>
+                  <label className="form-label">Nome</label>
+                  <input className="form-input" value={edicaoCliente?.nome||modal.dados.nome||''} onChange={e=>setEdicaoCliente(ed=>({...ed, nome:e.target.value}))} />
+                </div>
+                <div className="form-group" style={{marginBottom:'10px'}}>
+                  <label className="form-label">Telemóvel</label>
+                  <input className="form-input" value={edicaoCliente?.telemovel||modal.dados.telemovel||''} onChange={e=>setEdicaoCliente(ed=>({...ed, telemovel:e.target.value}))} />
+                </div>
+                <div className="form-group" style={{marginBottom:'10px'}}>
+                  <label className="form-label">Plano</label>
+                  <select className="form-select" value={edicaoCliente?.plano||''} onChange={e=>setEdicaoCliente(ed=>({...ed, plano:e.target.value}))}>
+                    <option value="1x_semana">1× Semana</option>
+                    <option value="2x_semana">2× Semana</option>
+                    <option value="duo">Duo</option>
+                    <option value="individual">Individual</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{marginBottom:'10px'}}>
+                  <label className="form-label">Turma{edicaoCliente?.plano==='2x_semana'?' (1ª aula)':''}</label>
+                  <select className="form-select" value={edicaoCliente?.turma_id||''} onChange={e=>setEdicaoCliente(ed=>({...ed, turma_id:e.target.value}))}>
+                    <option value="">— sem turma —</option>
+                    {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
+                  </select>
+                </div>
+                {edicaoCliente?.plano==='2x_semana' && (
+                  <div className="form-group" style={{marginBottom:'10px'}}>
+                    <label className="form-label">Turma (2ª aula)</label>
+                    <select className="form-select" value={edicaoCliente?.turma2_id||''} onChange={e=>setEdicaoCliente(ed=>({...ed, turma2_id:e.target.value}))}>
+                      <option value="">— sem turma —</option>
+                      {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
                     </select>
                   </div>
+                )}
+                <div className="form-group" style={{marginBottom:'10px'}}>
+                  <label className="form-label">Créditos</label>
+                  <input type="number" className="form-input" value={edicaoCliente?.creditos??0} onChange={e=>setEdicaoCliente(ed=>({...ed, creditos:parseInt(e.target.value)||0}))} />
                 </div>
-                <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>agendarSessaoFlex(modal.dados.id, novasSessoes[0]?.data, novasSessoes[0]?.hora)}>
-                  Agendar sessão
-                </button>
+                <div className="form-group" style={{marginBottom:'10px'}}>
+                  <label className="form-label">Estado</label>
+                  <select className="form-select" value={edicaoCliente?.estado||modal.dados.estado||''} onChange={e=>setEdicaoCliente(ed=>({...ed, estado:e.target.value}))}>
+                    <option value="pendente">Pendente</option>
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                    <option value="rejeitado">Rejeitado</option>
+                  </select>
+                </div>
+                <button className="btn btn-primary btn-full" style={{marginTop:'0.5rem'}} onClick={()=>guardarEdicaoCliente(modal.dados.id, edicaoCliente)}>Guardar alterações</button>
+                <button className="btn btn-danger btn-full" style={{marginTop:'0.5rem'}} onClick={()=>eliminarCliente(modal.dados.id)}>Eliminar cliente</button>
               </>
             )}
 
-            <button className="btn btn-danger btn-full" style={{marginTop:'0.5rem'}} onClick={()=>eliminarCliente(modal.dados.id)}>Eliminar cliente</button>
             <button className="btn btn-full" style={{marginTop:'0.5rem'}} onClick={()=>setModal(null)}>Fechar</button>
           </div>
         </div>
