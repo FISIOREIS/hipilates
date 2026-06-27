@@ -28,7 +28,9 @@ export default function ListaEsperaPublica() {
 
   if (enviado) return (
     <div className="auth-wrap" style={{textAlign:'center'}}>
-      <div className="auth-logo"><span className="logo-hi">Hi</span>-Pilates</div>
+      <div style={{marginBottom:'1.5rem'}}>
+        <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
+      </div>
       <div style={{fontSize:'48px',margin:'2rem 0 1rem'}}>✓</div>
       <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:'22px',marginBottom:'1rem'}}>Obrigada!</div>
       <p style={{fontSize:'13px',color:'var(--texto-muted)',lineHeight:1.8}}>
@@ -41,7 +43,9 @@ export default function ListaEsperaPublica() {
 
   return (
     <div className="auth-wrap">
-      <div className="auth-logo"><span className="logo-hi">Hi</span>-Pilates</div>
+      <div style={{marginBottom:'1.5rem',textAlign:'center'}}>
+        <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
+      </div>
       <p className="auth-sub">Lista de espera</p>
       <div className="card-elevated">
         <p style={{fontSize:'13px',color:'var(--texto-muted)',marginBottom:'1.5rem',lineHeight:1.6}}>
@@ -60,7 +64,6 @@ export default function ListaEsperaPublica() {
             <label className="form-label">Telemóvel *</label>
             <input className="form-input" type="tel" value={telemovel} onChange={e=>setTelemovel(e.target.value)} placeholder="9XX XXX XXX" required />
           </div>
-
           <p className="section-title">Horários preferidos (opcional)</p>
           {DIAS.map((dia, di) => {
             const horas = di < 5 ? HORAS_SEMANA : HORAS_SAB
@@ -76,7 +79,6 @@ export default function ListaEsperaPublica() {
               </div>
             )
           })}
-
           <button className="btn btn-primary btn-full" type="submit" disabled={loading} style={{marginTop:'1rem'}}>
             {loading ? 'A enviar...' : 'Entrar na lista de espera'}
           </button>
