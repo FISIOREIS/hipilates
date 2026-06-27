@@ -243,6 +243,12 @@ export default function Registo() {
                     {verPasswordConfirmar ? '🙈' : '👁️'}
                   </span>
                 </div>
+                {form.passwordConfirmar.length > 0 && (
+                  <div style={{marginTop:'6px',display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:form.password===form.passwordConfirmar?'var(--sucesso)':'var(--erro)'}}>
+                    <span style={{fontWeight:700,fontSize:'13px'}}>{form.password===form.passwordConfirmar ? '✓' : '✗'}</span>
+                    {form.password===form.passwordConfirmar ? 'As passwords coincidem' : 'As passwords não coincidem'}
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Telemóvel *</label>
