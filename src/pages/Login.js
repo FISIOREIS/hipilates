@@ -2,17 +2,11 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-const FOTO = 'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/WhatsApp%20Image%202026-06-07%20at%2015.23.34.jpeg'
-
-const LogoSVG = () => (
-  <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-    <path d="M8 6 Q10 14 9 22" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-    <path d="M9 14 Q13 10 16 14" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-    <path d="M16 14 Q17 20 16 26" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-    <circle cx="20" cy="7" r="2.5" fill="var(--madeira)" opacity="0.5"/>
-    <path d="M18 10 Q21 14 24 22" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-  </svg>
-)
+const FOTOS = [
+  'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/1.jpg',
+  'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/2.jpg',
+  'https://mjnrqugvcfwnkdhnxyjz.supabase.co/storage/v1/object/public/Imagens/3.jpg',
+]
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -21,6 +15,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [resetMode, setResetMode] = useState(false)
   const [resetEnviado, setResetEnviado] = useState(false)
+  const [verPassword, setVerPassword] = useState(false)
 
   async function entrar(e) {
     e.preventDefault()
@@ -35,7 +30,7 @@ export default function Login() {
     if (!email) { setErro('Introduza o seu email.'); return }
     setErro(''); setLoading(true)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://hipilates2.vercel.app'
+      redirectTo: 'https://hipilates.pt/reset'
     })
     if (error) setErro('Erro ao enviar email. Verifique o endereço.')
     else setResetEnviado(true)
@@ -45,10 +40,10 @@ export default function Login() {
   return (
     <div className="auth-wrap">
       <div className="auth-hero">
-        <img src={FOTO} alt="Hipilates Studio" />
+        <img src={FOTOS[0]} alt="Hipilates" />
         <div className="auth-hero-overlay">
-          <div className="auth-hero-logo">Hipilates</div>
-          <div className="auth-hero-sub">by fisioreis studio</div>
+          <img src="/texto_vertival_login.png" alt="Hipilates" style={{height:'80px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.95}} />
+          <div className="auth-hero-sub" style={{marginTop:'8px'}}>by fisioreis</div>
         </div>
       </div>
 
@@ -97,8 +92,13 @@ export default function Login() {
               </div>
               <div className="form-group" style={{marginBottom:'8px'}}>
                 <label className="form-label">Password</label>
-                <input className="form-input" type="password" value={password}
-                  onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+                <div style={{position:'relative'}}>
+                  <input className="form-input" type={verPassword?'text':'password'} value={password}
+                    onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={{paddingRight:'44px'}} />
+                  <span onClick={()=>setVerPassword(v=>!v)} style={{position:'absolute',right:'14px',top:'50%',transform:'translateY(-50%)',cursor:'pointer',fontSize:'16px',color:'var(--texto-muted)',userSelect:'none'}}>
+                    {verPassword ? '🙈' : '👁️'}
+                  </span>
+                </div>
               </div>
               <div style={{textAlign:'right',marginBottom:'16px'}}>
                 <span style={{fontSize:'11px',color:'var(--madeira)',cursor:'pointer',borderBottom:'1px solid var(--champanhe)'}} onClick={()=>{setResetMode(true);setErro('')}}>
