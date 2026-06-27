@@ -236,26 +236,24 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
           <div className="form-group">
             <label className="form-label">Nova password</label>
             <div style={{position:'relative'}}>
-              <input className="form-input" type={verNova?'text':'password'} value={passwordNova} onChange={e=>setPasswordNova(e.target.value)} placeholder="mínimo 12 caracteres" style={{paddingRight:'44px'}} />
+              <input className="form-input" type={verNova?'text':'password'} value={passwordNova} onChange={e=>setPasswordNova(e.target.value)} placeholder="" style={{paddingRight:'44px'}} />
               <span onClick={()=>setVerNova(v=>!v)} style={{position:'absolute',right:'14px',top:'50%',transform:'translateY(-50%)',cursor:'pointer',fontSize:'16px',color:'var(--texto-muted)'}}>
                 {verNova ? '🙈' : '👁️'}
               </span>
             </div>
-            {passwordNova && (
-              <div style={{marginTop:'8px',display:'flex',flexDirection:'column',gap:'4px'}}>
-                {[
-                  { ok: passwordNova.length >= 12, label: 'Mínimo 12 caracteres' },
-                  { ok: /[A-Z]/.test(passwordNova), label: 'Uma letra maiúscula' },
-                  { ok: /[0-9]/.test(passwordNova), label: 'Um número' },
-                  { ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordNova), label: 'Um símbolo (!@#$%...)' },
-                ].map((r,i) => (
-                  <div key={i} style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:r.ok?'var(--sucesso)':'var(--texto-muted)'}}>
-                    <span style={{fontWeight:700,fontSize:'13px'}}>{r.ok ? '✓' : '✗'}</span>
-                    {r.label}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{marginTop:'8px',display:'flex',flexDirection:'column',gap:'4px'}}>
+              {[
+                { ok: passwordNova.length >= 12, label: 'Mínimo 12 caracteres' },
+                { ok: /[A-Z]/.test(passwordNova), label: 'Uma letra maiúscula' },
+                { ok: /[0-9]/.test(passwordNova), label: 'Um número' },
+                { ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordNova), label: 'Um símbolo (!@#$%...)' },
+              ].map((r,i) => (
+                <div key={i} style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:r.ok?'var(--sucesso)':'var(--texto-muted)'}}>
+                  <span style={{fontWeight:700,fontSize:'13px'}}>{r.ok ? '✓' : '✗'}</span>
+                  {r.label}
+                </div>
+              ))}
+            </div>
           </div>
           <div className="form-group" style={{marginBottom:0}}>
             <label className="form-label">Confirmar nova password</label>
