@@ -189,7 +189,7 @@ export default function Landing() {
 
       {/* CTA FINAL */}
       <div style={{background:'#f5f0e8',padding:'5rem 1.5rem',textAlign:'center'}}>
-        <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'40px',objectFit:'contain'}} />
+        <img src="/logo_horizontal__rodape.png" alt="Hipilates" style={{height:'40px',objectFit:'contain'}} />
         <h2 style={{fontSize:'clamp(22px,4vw,32px)',fontWeight:600,color:'#2a2420',margin:'1.5rem 0 1rem',lineHeight:1.3}}>
           Pronto para começar?
         </h2>
@@ -207,7 +207,7 @@ export default function Landing() {
       {/* RODAPÉ */}
       <div style={{background:'#2a2420',padding:'2rem 1.5rem',textAlign:'center'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',marginBottom:'1rem'}}>
-          <img src="/logo_horizontal__rodapé.png" alt="Hipilates" style={{height:'20px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.5}} />
+          <img src="/logo_horizontal__rodape.png" alt="Hipilates" style={{height:'20px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.5}} />
           <span style={{fontSize:'12px',letterSpacing:'3px',textTransform:'uppercase',color:'rgba(255,255,255,0.4)',fontWeight:500}}>Hipilates · by fisioreis</span>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'1.5rem'}}>
@@ -218,7 +218,7 @@ export default function Landing() {
             <span style={{color:'#a08060',fontSize:'14px'}}>📞</span> 913 197 254
           </div>
           <div style={{fontSize:'12px',color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
-            <span style={{color:'#a08060',fontSize:'14px'}}>✉</span> geral@fisioreis.pt
+            <span style={{color:'#a08060',fontSize:'14px'}}>✉</span> hipilates@fisioreis.pt
           </div>
         </div>
         <p style={{fontSize:'11px',color:'rgba(255,255,255,0.3)',letterSpacing:'0.5px'}}>© 2026 Hipilates. Todos os direitos reservados.</p>
