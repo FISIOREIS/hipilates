@@ -10,23 +10,13 @@ const PLANOS = [
   { id: 'individual', nome: 'Individual', preco: '40€', sub: 'por aula', desc: 'Pack 10 aulas · 400€', horarios: ['Manhã: 08h–12h', 'Tarde: 13h–16h'] },
 ]
 
-// Horários por plano
 const HORAS_TODAS = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00']
 const HORAS_MANHA_TARDE = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']
 const HORAS_SAB = ['08:00','09:00','10:00','11:00','12:00','13:00']
-
 const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex']
 const OBJETIVOS = ['Melhorar postura','Ganhar flexibilidade','Reabilitação','Bem-estar geral','Tonificação muscular','Reduzir stress']
 const EXPERIENCIAS = ['Nunca pratiquei','Menos de 6 meses','6 meses a 1 ano','Mais de 1 ano']
 const PROBLEMAS = ['Coluna','Joelhos','Ombros','Quadril','Cervical','Outro']
-
-function getHorasPermitidas(plano, diaSemana) {
-  if (diaSemana === 'Sáb') {
-    return plano === '1x_semana' ? HORAS_SAB : []
-  }
-  if (plano === '1x_semana') return HORAS_TODAS
-  return HORAS_MANHA_TARDE
-}
 
 const REGULAMENTO = `
 **Inscrição**
@@ -39,10 +29,10 @@ const REGULAMENTO = `
 - Falta de pagamento superior a 1 mês sem aviso prévio implica perda do lugar na turma.
 - As mensalidades são devidas mesmo em caso de ausência.
 - Mudança de modalidade deve ser comunicada no mês anterior.
-- Desistência: aviso com 30 dias de antecedência, caso contrário o mês é cobrado na totalidade.
+- A desistência requer aviso prévio de 30 dias por email para hipilates@fisioreis.pt ou por telefone para 913 197 254. Cancelar o débito no banco não substitui esse aviso — a mensalidade mantém-se devida e será cobrada por outro meio.
 
 **Pagamento Duo e Individual**
-- Pagamento efetuado no início da aula ou na aquisição do pack.
+- Pagamento efetuado no início do pack.
 
 **Cancelamentos e Reposições**
 - Avisar com pelo menos 24 horas de antecedência para ter direito a aula de reposição (fica em crédito na aplicação).
@@ -63,6 +53,31 @@ const REGULAMENTO = `
 - Encerramentos previamente comunicados: aulas creditadas para reposição ao longo do ano.
 `
 
+function validarPassword(p) {
+  if (p.length < 12) return 'A password deve ter pelo menos 12 caracteres.'
+  if (!/[A-Z]/.test(p)) return 'A password deve ter pelo menos uma letra maiúscula.'
+  if (!/[0-9]/.test(p)) return 'A password deve ter pelo menos um número.'
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p)) return 'A password deve ter pelo menos um símbolo (ex: !@#$%).'
+  return null
+}
+
+function validarNIF(nif) {
+  const n = nif.replace(/\s/g, '')
+  if (!/^\d{9}$/.test(n)) return false
+  if (!['1','2','3','5','6','7','8','9'].includes(n[0])) return false
+  let soma = 0
+  for (let i = 0; i < 8; i++) soma += parseInt(n[i]) * (9 - i)
+  const resto = soma % 11
+  const check = resto < 2 ? 0 : 11 - resto
+  return check === parseInt(n[8])
+}
+
+function gerarCaptcha() {
+  const a = Math.floor(Math.random() * 10) + 1
+  const b = Math.floor(Math.random() * 10) + 1
+  return { a, b, res: a + b }
+}
+
 export default function Registo() {
   const [passo, setPasso] = useState(1)
   const [form, setForm] = useState({
@@ -80,7 +95,6 @@ export default function Registo() {
   const [medicacao, setMedicacao] = useState(false)
   const [medicacaoDesc, setMedicacaoDesc] = useState('')
   const [gravidez, setGravidez] = useState(false)
-  const [horariosPref, setHorariosPref] = useState([])
   const [horariosPorDia, setHorariosPorDia] = useState({})
   const [disponibilidadeLivre, setDisponibilidadeLivre] = useState('')
   const [aceitaPrivacidade, setAceitaPrivacidade] = useState(false)
@@ -91,19 +105,44 @@ export default function Registo() {
   const [loading, setLoading] = useState(false)
   const [verPassword, setVerPassword] = useState(false)
   const [verPasswordConfirmar, setVerPasswordConfirmar] = useState(false)
+  const [captcha] = useState(gerarCaptcha)
+  const [captchaResposta, setCaptchaResposta] = useState('')
+  const [modoListaEspera, setModoListaEspera] = useState(false)
 
   const set = (k, v) => setForm(f => ({...f, [k]: v}))
   const toggleArr = (arr, setArr, v) => setArr(p => p.includes(v) ? p.filter(x=>x!==v) : [...p, v])
 
+  const forcaPassword = (p) => {
+    if (!p) return null
+    let score = 0
+    if (p.length >= 12) score++
+    if (/[A-Z]/.test(p)) score++
+    if (/[0-9]/.test(p)) score++
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p)) score++
+    if (score <= 1) return { label: 'Fraca', color: 'var(--erro)', width: '25%' }
+    if (score === 2) return { label: 'Razoável', color: '#e0a020', width: '50%' }
+    if (score === 3) return { label: 'Boa', color: '#4a90d9', width: '75%' }
+    return { label: 'Forte', color: 'var(--sucesso)', width: '100%' }
+  }
+  const forca = forcaPassword(form.password)
+
   const planoSelecionado = PLANOS.find(p => p.id === form.plano)
-  const diasDisponiveis = form.plano === '1x_semana'
-    ? ['Seg','Ter','Qua','Qui','Sex','Sáb']
-    : ['Seg','Ter','Qua','Qui','Sex']
+  const diasDisponiveis = form.plano === '1x_semana' ? ['Seg','Ter','Qua','Qui','Sex','Sáb'] : ['Seg','Ter','Qua','Qui','Sex']
+
+  async function verificarModoListaEspera() {
+    const { data } = await supabase.from('configuracoes').select('valor').eq('chave','modo_lista_espera').maybeSingle()
+    return data?.valor === 'true'
+  }
 
   async function registar() {
     if (!aceitaPrivacidade) { setErro('Por favor aceite a Política de Privacidade.'); return }
-    if (!leuRegulamento) { setErro('Por favor confirme que leu o Regulamento Interno do Estúdio.'); return }
+    if (!leuRegulamento) { setErro('Por favor confirme que leu o Regulamento Interno.'); return }
+    if (parseInt(captchaResposta) !== captcha.res) { setErro('Resposta incorreta à pergunta de verificação.'); return }
     setErro(''); setLoading(true)
+
+    const listaEspera = await verificarModoListaEspera()
+    setModoListaEspera(listaEspera)
+
     const { error } = await supabase.auth.signUp({
       email: form.email, password: form.password,
       options: { data: { nome: form.nome, plano: form.plano } }
@@ -111,6 +150,9 @@ export default function Registo() {
     if (error) { setErro(error.message); setLoading(false); return }
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      const horariosPref = Object.entries(horariosPorDia).flatMap(([dia, obj]) =>
+        (obj.horas || []).map(h => `${dia} ${h}`)
+      )
       await supabase.from('profiles').update({
         telemovel: form.telemovel, nif: form.nif,
         morada: form.morada, codigo_postal: form.codigoPostal, localidade: form.localidade,
@@ -121,17 +163,24 @@ export default function Registo() {
         cirurgias, cirurgias_descricao: cirurgiasDesc,
         medicacao, medicacao_descricao: medicacaoDesc,
         gravidez, horarios_preferidos: horariosPref,
-        disponibilidade_livre: disponibilidadeLivre || null,
-        horarios_por_dia: horariosPorDia || null,
         acompanhante_nome: form.acompanhante,
         acompanhante_contacto: form.acompanhanteContacto,
         estado: 'pendente'
       }).eq('id', user.id)
+
+      if (listaEspera) {
+        await supabase.from('notificacoes').insert({
+          cliente_id: user.id,
+          titulo: 'Em lista de espera',
+          mensagem: 'O estúdio está neste momento com capacidade máxima. A sua inscrição foi registada e será contactado assim que houver uma vaga disponível.',
+          tipo: 'info'
+        })
+      }
     }
     setLoading(false)
   }
 
-  const passoLabels = ['Dados Pessoais','Saúde','Horários','Regulamento Interno','Confirmação']
+  const passoLabels = ['Dados Pessoais','Saúde','Horários','Regulamento','Confirmação']
   const progresso = (passo / passoLabels.length) * 100
 
   return (
@@ -140,16 +189,9 @@ export default function Registo() {
 
       <div style={{padding:'1.5rem 1.5rem 0'}}>
         <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'1.5rem'}}>
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-            <path d="M8 6 Q10 14 9 22" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-            <path d="M9 14 Q13 10 16 14" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-            <path d="M16 14 Q17 20 16 26" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-            <circle cx="20" cy="7" r="2.5" fill="var(--madeira)" opacity="0.5"/>
-            <path d="M18 10 Q21 14 24 22" stroke="var(--madeira)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-          </svg>
-          <span style={{fontSize:'16px',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',color:'var(--grafite)'}}>Hipilates</span>
+          <img src="/simbolo__header_.png" alt="Hipilates" style={{height:'24px',objectFit:'contain'}} />
+          <span style={{fontSize:'16px',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',color:'var(--grafite)'}}>hipilates</span>
         </div>
-
         <div className="progress-bar">
           <div className="progress-fill" style={{width:`${progresso}%`}} />
         </div>
@@ -174,11 +216,19 @@ export default function Registo() {
               <div className="form-group">
                 <label className="form-label">Password *</label>
                 <div style={{position:'relative'}}>
-                  <input className="form-input" type={verPassword?'text':'password'} value={form.password} onChange={e=>set('password',e.target.value)} placeholder="mínimo 6 caracteres" style={{paddingRight:'44px'}} />
+                  <input className="form-input" type={verPassword?'text':'password'} value={form.password} onChange={e=>set('password',e.target.value)} placeholder="mín. 12 caracteres, maiúscula, número, símbolo" style={{paddingRight:'44px'}} />
                   <span onClick={()=>setVerPassword(v=>!v)} style={{position:'absolute',right:'14px',top:'50%',transform:'translateY(-50%)',cursor:'pointer',fontSize:'16px',color:'var(--texto-muted)',userSelect:'none'}}>
                     {verPassword ? '🙈' : '👁️'}
                   </span>
                 </div>
+                {form.password && forca && (
+                  <div style={{marginTop:'6px'}}>
+                    <div style={{height:'4px',background:'var(--borda)',borderRadius:'2px',marginBottom:'4px'}}>
+                      <div style={{height:'100%',width:forca.width,background:forca.color,borderRadius:'2px',transition:'width 0.3s'}} />
+                    </div>
+                    <span style={{fontSize:'10px',color:forca.color,fontWeight:600}}>{forca.label}</span>
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Confirmar password *</label>
@@ -199,7 +249,7 @@ export default function Registo() {
               </div>
               <div className="form-group">
                 <label className="form-label">NIF *</label>
-                <input className="form-input" value={form.nif} onChange={e=>set('nif',e.target.value)} placeholder="Ex: 123456789" />
+                <input className="form-input" value={form.nif} onChange={e=>set('nif',e.target.value.replace(/\D/g,'').slice(0,9))} placeholder="9 dígitos" maxLength={9} />
               </div>
               <div className="form-group">
                 <label className="form-label">Morada *</label>
@@ -218,7 +268,7 @@ export default function Registo() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
                 <div className="form-group">
                   <label className="form-label">Subsistema de saúde</label>
-                  <input className="form-input" value={form.subsistema} onChange={e=>set('subsistema',e.target.value)} placeholder="Ex: Médis" />
+                  <input className="form-input" value={form.subsistema} onChange={e=>set('subsistema',e.target.value)} placeholder="Ex: ADSE" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nº beneficiário</label>
@@ -245,22 +295,27 @@ export default function Registo() {
                 ))}
               </div>
 
-              <button className="btn btn-primary btn-full"
-                onClick={()=>{ 
-  const camposFalha = [];
-  if(!form.nome) camposFalha.push('nome');
-  if(!form.email) camposFalha.push('email');
-  if(!form.password) camposFalha.push('password');
-  if(!form.passwordConfirmar) camposFalha.push('confirmar password');
-  if(!form.telemovel) camposFalha.push('telemóvel');
-  if(!form.nif) camposFalha.push('nif');
-  if(!form.morada) camposFalha.push('morada');
-  if(!form.codigoPostal) camposFalha.push('código postal');
-  if(!form.localidade) camposFalha.push('localidade');
-  if(camposFalha.length > 0){setErro('Campos em falta: ' + camposFalha.join(', '));return;}
-  if(form.password.length<6){setErro('A password deve ter pelo menos 6 caracteres.');return;}
-  if(form.password!==form.passwordConfirmar){setErro('As passwords não coincidem.');return;}
-  setErro('');setPasso(2) }}>
+              <button className="btn btn-primary btn-full" onClick={()=>{
+                const campos = []
+                if (!form.nome.trim()) campos.push('nome')
+                if (!form.email.trim()) campos.push('email')
+                if (!form.password) campos.push('password')
+                if (!form.passwordConfirmar) campos.push('confirmar password')
+                if (!form.telemovel.trim()) campos.push('telemóvel')
+                if (!form.dataNasc) campos.push('data de nascimento')
+                if (!form.nif.trim()) campos.push('NIF')
+                if (!form.morada.trim()) campos.push('morada')
+                if (!form.codigoPostal.trim()) campos.push('código postal')
+                if (!form.localidade.trim()) campos.push('localidade')
+                if (campos.length > 0) { setErro('Campos obrigatórios em falta: ' + campos.join(', ') + '.'); return }
+                if (!validarNIF(form.nif)) { setErro('NIF inválido. Verifique os 9 dígitos introduzidos.'); return }
+                const erroPass = validarPassword(form.password)
+                if (erroPass) { setErro(erroPass); return }
+                if (form.password !== form.passwordConfirmar) { setErro('As passwords não coincidem.'); return }
+                const tel = form.telemovel.replace(/\s/g,'')
+                if (!/^9[0-9]{8}$/.test(tel)) { setErro('Telemóvel inválido. Deve começar por 9 e ter 9 dígitos.'); return }
+                setErro(''); setPasso(2)
+              }}>
                 Continuar
               </button>
               <p className="switch-link">Já tem conta? <Link to="/login">Entrar aqui</Link></p>
@@ -322,16 +377,9 @@ export default function Registo() {
           {/* PASSO 3 — Horários */}
           {passo === 3 && (
             <>
-              {(form.plano === 'duo' || form.plano === 'individual') && (
-                <div className="notif" style={{marginBottom:'1.25rem'}}>
-                  <span>As sessões são agendadas de forma flexível entre as 08h e as 16h, de segunda-feira a sexta-feira.</span>
-                </div>
-              )}
-              {(form.plano === '1x_semana' || form.plano === '2x_semana') && (
-                <div className="notif" style={{marginBottom:'1.25rem'}}>
-                  <span>Selecione os horários preferidos para cada dia. Iremos atribuir uma turma com base nas preferências.</span>
-                </div>
-              )}
+              <div className="notif" style={{marginBottom:'1.25rem'}}>
+                <span>Selecione os dias e horários que prefere. Iremos atribuir uma turma com base nas suas preferências.</span>
+              </div>
 
               <div className="ficha-section">
                 <div className="ficha-section-title">Dias preferidos</div>
@@ -393,14 +441,14 @@ export default function Registo() {
 
               <div className="form-group" style={{marginTop:'1rem'}}>
                 <label className="form-label">Observações sobre disponibilidade</label>
-                <textarea className="form-textarea" value={disponibilidadeLivre} onChange={e=>setDisponibilidadeLivre(e.target.value)} />
+                <textarea className="form-textarea" value={disponibilidadeLivre} onChange={e=>setDisponibilidadeLivre(e.target.value)} placeholder="Ex: só disponível após as 10h às quartas-feiras" />
               </div>
 
               <div className="divider" />
               <div className="ficha-section">
                 <div className="ficha-section-title">Prefere ficar numa turma com alguém conhecido?</div>
                 <p style={{fontSize:'12px',color:'var(--texto-muted)',marginBottom:'12px',lineHeight:1.6}}>
-                  Se tiver alguém com quem gostaria de praticar, indique o nome e contacto. Tentaremos colocá-los na mesma turma.
+                  Se tiver alguém com quem gostaria de praticar, indique o nome e contacto.
                 </p>
                 <div className="form-group">
                   <label className="form-label">Nome do acompanhante</label>
@@ -424,9 +472,6 @@ export default function Registo() {
             <>
               <div className="ficha-section">
                 <div className="ficha-section-title">Regulamento Interno do Estúdio</div>
-                <p style={{fontSize:'12px',color:'var(--texto-muted)',marginBottom:'12px',lineHeight:1.6}}>
-                  Por favor leia o regulamento antes de confirmar a sua inscrição.
-                </p>
                 <div className="regulamento">
                   {REGULAMENTO.split('\n\n').map((bloco, i) => {
                     const linhas = bloco.split('\n').filter(l => l.trim())
@@ -440,7 +485,7 @@ export default function Registo() {
                         {paragrafos.map((p, j) => <p key={`p${j}`}>{p}</p>)}
                         {itens.length > 0 && (
                           <ul style={{margin:'0 0 8px 0', paddingLeft:'18px'}}>
-                            {itens.map((it, j) => <li key={`i${j}`} style={{marginBottom:'4px'}}>{it.replace(/^- /,'')}</li>)}
+                            {itens.map((it, j) => <li key={`i${j}`} style={{marginBottom:'4px'}}>{it.replace(/^- ,'')}</li>)}
                           </ul>
                         )}
                       </div>
@@ -470,10 +515,6 @@ export default function Registo() {
                 </label>
               </div>
 
-              <div className="notif" style={{marginBottom:'1rem'}}>
-                <span style={{fontSize:'12px'}}>A sua inscrição será analisada pela nossa equipa. Será contactado assim que for validada.</span>
-              </div>
-
               <div style={{display:'flex',gap:'8px'}}>
                 <button className="btn btn-full" style={{marginTop:0}} onClick={()=>setPasso(3)}>Voltar</button>
                 <button className="btn btn-primary btn-full" style={{marginTop:0}}
@@ -484,19 +525,34 @@ export default function Registo() {
             </>
           )}
 
-          {/* PASSO 5 — Confirmação */}
+          {/* PASSO 5 — Verificação e Confirmação */}
           {passo === 5 && (
             <>
-              <div style={{textAlign:'center',padding:'1rem 0 2rem'}}>
-                <div style={{width:'64px',height:'64px',background:'var(--grafite)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1.5rem',fontSize:'28px'}}>✓</div>
+              <div style={{textAlign:'center',padding:'1rem 0 1.5rem'}}>
                 <div style={{fontSize:'22px',fontWeight:600,letterSpacing:'1px',marginBottom:'12px',color:'var(--grafite)'}}>Quase pronto!</div>
-                <p style={{fontSize:'13px',color:'var(--texto-muted)',lineHeight:1.8,marginBottom:'2rem'}}>
-                  Confirme a sua inscrição. A nossa equipa irá analisá-la e entrar em contacto brevemente com os próximos passos.
+                <p style={{fontSize:'13px',color:'var(--texto-muted)',lineHeight:1.8,marginBottom:'1.5rem'}}>
+                  A nossa equipa irá analisar a sua inscrição e entrar em contacto brevemente.
                 </p>
                 <div className="notif" style={{textAlign:'left',marginBottom:'2rem'}}>
-                  <span style={{fontSize:'12px'}}>Após validação receberá na aplicação todas as informações de pagamento e a sua turma atribuída.</span>
+                  <span style={{fontSize:'12px'}}>Após validação receberá na aplicação a sua turma atribuída e as instruções de pagamento.</span>
                 </div>
               </div>
+
+              <div className="card" style={{marginBottom:'1.5rem',background:'var(--areia)'}}>
+                <div style={{fontSize:'11px',letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--madeira)',fontWeight:600,marginBottom:'12px'}}>Verificação de segurança</div>
+                <p style={{fontSize:'14px',color:'var(--grafite)',marginBottom:'12px',fontWeight:500}}>
+                  Quanto é {captcha.a} + {captcha.b}?
+                </p>
+                <input
+                  className="form-input"
+                  type="number"
+                  value={captchaResposta}
+                  onChange={e=>setCaptchaResposta(e.target.value)}
+                  placeholder="A sua resposta"
+                  style={{marginBottom:0}}
+                />
+              </div>
+
               <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={registar} disabled={loading}>
                 {loading ? 'A criar conta...' : 'Confirmar inscrição'}
               </button>
