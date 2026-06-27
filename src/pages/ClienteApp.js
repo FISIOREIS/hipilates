@@ -286,7 +286,7 @@ export default function ClienteApp() {
         <div style={{width:'64px',height:'64px',background:'var(--areia)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1.5rem',fontSize:'28px'}}>⏳</div>
         <div style={{fontSize:'20px',fontWeight:600,letterSpacing:'1px',marginBottom:'1rem',color:'var(--grafite)'}}>Inscrição em análise</div>
         <p style={{fontSize:'13px',color:'var(--texto-muted)',lineHeight:1.8,marginBottom:'2rem'}}>
-          A inscrição está a ser analisada pela equipa.<br/>Será contactado assim que for validada.
+          A inscrição está a ser analisada pela equipa.<br/>Será contactado assim que for validada.<br/><br/>Obrigado por se juntar a nós! 😊
         </p>
       </div>
     </div>
