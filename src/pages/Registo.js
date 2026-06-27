@@ -485,7 +485,7 @@ export default function Registo() {
                         {paragrafos.map((p, j) => <p key={`p${j}`}>{p}</p>)}
                         {itens.length > 0 && (
                           <ul style={{margin:'0 0 8px 0', paddingLeft:'18px'}}>
-                            {itens.map((it, j) => <li key={`i${j}`} style={{marginBottom:'4px'}}>{it.replace(/^- ,'')}</li>)}
+                            {itens.map((it, j) => <li key={`i${j}`} style={{marginBottom:'4px'}}>{it.replace(/^- /,'')}</li>)}
                           </ul>
                         )}
                       </div>
