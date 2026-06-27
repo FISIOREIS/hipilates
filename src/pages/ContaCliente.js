@@ -28,6 +28,8 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
     morada: perfil?.morada || '',
     codigoPostal: perfil?.codigo_postal || '',
     localidade: perfil?.localidade || '',
+    subsistema: perfil?.subsistema_saude || '',
+    subNumero: perfil?.subsistema_numero || '',
   })
   const [objetivos, setObjetivos] = useState(perfil?.objetivos ? perfil.objetivos.split(', ') : [])
   const [experiencia, setExperiencia] = useState(perfil?.experiencia || '')
@@ -62,6 +64,8 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
       morada: form.morada,
       codigo_postal: form.codigoPostal,
       localidade: form.localidade,
+      subsistema_saude: form.subsistema,
+      subsistema_numero: form.subNumero,
     }).eq('id', perfil.id)
     if (error) setErro('Erro ao guardar. Tente novamente.')
     else { mostrarNotif('Dados atualizados.'); onAtualizar() }
@@ -171,6 +175,16 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
             <label className="form-label">NIF</label>
             <input className="form-input" value={perfil?.nif || '—'} disabled style={{opacity:0.6,cursor:'not-allowed'}} />
             <span style={{fontSize:'10px',color:'var(--texto-muted)',marginTop:'4px',display:'block'}}>O NIF não pode ser alterado. Contacte o estúdio se necessário.</span>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+            <div className="form-group">
+              <label className="form-label">Subsistema de saúde</label>
+              <input className="form-input" value={form.subsistema} onChange={e=>set('subsistema',e.target.value)} placeholder="Ex: ADSE" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Nº beneficiário</label>
+              <input className="form-input" value={form.subNumero} onChange={e=>set('subNumero',e.target.value)} placeholder="Ex: 250" />
+            </div>
           </div>
           <button className="btn btn-primary btn-full" onClick={guardarDados} disabled={loading}>
             {loading ? 'A guardar...' : 'Guardar alterações'}
@@ -310,4 +324,4 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
       </button>
     </div>
   )
-}
+}\
