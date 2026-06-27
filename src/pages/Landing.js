@@ -77,7 +77,7 @@ export default function Landing() {
         <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(42,36,32,0.2) 0%, rgba(42,36,32,0.65) 100%)'}} />
         <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem',textAlign:'center'}}>
           <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'1.5rem'}}>
-            <img src="/texto vertival login.png" alt="Hipilates" style={{height:'60px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.95}} />
+            <img src="/simbolo (header).png.png" alt="Hipilates" style={{height:'50px',objectFit:'contain',filter:'brightness(0) invert(1)',opacity:0.9}} />
           </div>
           <h1 style={{fontSize:'clamp(36px,8vw,72px)',fontWeight:700,letterSpacing:'8px',textTransform:'uppercase',color:'white',marginBottom:'1rem',lineHeight:1.1}}>
             Hipilates
@@ -189,7 +189,10 @@ export default function Landing() {
 
       {/* CTA FINAL */}
       <div style={{background:'#f5f0e8',padding:'5rem 1.5rem',textAlign:'center'}}>
-        <img src="/logo-rodape.png" alt="Hipilates" style={{height:'40px',objectFit:'contain'}} />
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'10px',marginBottom:'1.5rem'}}>
+          <img src="/simbolo (header).png.png" alt="Hipilates" style={{height:'36px',objectFit:'contain'}} />
+          <span style={{fontSize:'18px',fontWeight:300,letterSpacing:'4px',textTransform:'uppercase',color:'#2a2420'}}>hipilates</span>
+        </div>
         <h2 style={{fontSize:'clamp(22px,4vw,32px)',fontWeight:600,color:'#2a2420',margin:'1.5rem 0 1rem',lineHeight:1.3}}>
           Pronto para começar?
         </h2>
