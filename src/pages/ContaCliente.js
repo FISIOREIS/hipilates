@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const OBJETIVOS = ['Melhorar postura','Ganhar flexibilidade','Reabilitação','Bem-estar geral','Tonificação muscular','Reduzir stress']
@@ -6,11 +6,19 @@ const EXPERIENCIAS = ['Nunca pratiquei','Menos de 6 meses','6 meses a 1 ano','Ma
 const PROBLEMAS = ['Coluna','Joelhos','Ombros','Quadril','Cervical','Outro']
 
 const PLANOS = [
-  { id: '1x_semana', nome: '1× Semana', preco: '15€/aula', sub: '60€/mês' },
-  { id: '2x_semana', nome: '2× Semana', preco: '12,50€/aula', sub: '100€/mês' },
-  { id: 'duo', nome: 'Duo', preco: '30€/aula', sub: 'por pessoa' },
-  { id: 'individual', nome: 'Individual', preco: '45€/aula', sub: 'Pack 10: 400€' },
+  { id: '1x_semana', nome: '1× Semana', preco: '55€/mês', sub: 'Turma até 5 pessoas' },
+  { id: '2x_semana', nome: '2× Semana', preco: '90€/mês', sub: 'Turma até 5 pessoas' },
+  { id: 'duo', nome: 'Duo', preco: '27,50€/aula', sub: 'Pack 10: 275€/pessoa' },
+  { id: 'individual', nome: 'Individual', preco: '40€/aula', sub: 'Pack 10: 400€' },
 ]
+
+function validarPassword(p) {
+  if (p.length < 12) return 'A password deve ter pelo menos 12 caracteres.'
+  if (!/[A-Z]/.test(p)) return 'A password deve ter pelo menos uma letra maiúscula.'
+  if (!/[0-9]/.test(p)) return 'A password deve ter pelo menos um número.'
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p)) return 'A password deve ter pelo menos um símbolo (ex: !@#$%).'
+  return null
+}
 
 export default function ContaCliente({ perfil, onAtualizar, onSair }) {
   const [tab, setTab] = useState('dados')
@@ -44,7 +52,10 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
   const mostrarNotif = (msg) => { setNotif(msg); setTimeout(() => setNotif(''), 3500) }
 
   async function guardarDados() {
-    setErro(''); setLoading(true)
+    setErro('')
+    if (!form.nome.trim()) { setErro('O nome é obrigatório.'); return }
+    if (!form.telemovel.trim()) { setErro('O telemóvel é obrigatório.'); return }
+    setLoading(true)
     const { error } = await supabase.from('profiles').update({
       nome: form.nome,
       telemovel: form.telemovel,
@@ -53,7 +64,7 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
       localidade: form.localidade,
     }).eq('id', perfil.id)
     if (error) setErro('Erro ao guardar. Tente novamente.')
-    else { mostrarNotif('Dados atualizados com sucesso.'); onAtualizar() }
+    else { mostrarNotif('Dados atualizados.'); onAtualizar() }
     setLoading(false)
   }
 
@@ -75,7 +86,8 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
 
   async function alterarPassword() {
     setErro('')
-    if (passwordNova.length < 6) { setErro('A nova password deve ter pelo menos 6 caracteres.'); return }
+    const erroPass = validarPassword(passwordNova)
+    if (erroPass) { setErro(erroPass); return }
     if (passwordNova !== passwordConfirmar) { setErro('As passwords não coincidem.'); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password: passwordNova })
@@ -97,12 +109,27 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
       mensagem: `O utente ${perfil.nome} solicitou alteração do plano atual (${perfil.plano?.replace(/_/g,' ')}) para ${plano?.nome}.`,
       tipo: 'info'
     })
-    mostrarNotif('Pedido de alteração de plano enviado. A equipa irá contactá-lo brevemente.')
+    mostrarNotif('Pedido enviado. A equipa irá contactá-lo brevemente.')
     setPlanoSolicitado('')
     setLoading(false)
   }
 
   const planoAtual = PLANOS.find(p => p.id === perfil?.plano)
+
+  const forcaPassword = (p) => {
+    if (!p) return null
+    let score = 0
+    if (p.length >= 12) score++
+    if (/[A-Z]/.test(p)) score++
+    if (/[0-9]/.test(p)) score++
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p)) score++
+    if (score <= 1) return { label: 'Fraca', color: 'var(--erro)', width: '25%' }
+    if (score === 2) return { label: 'Razoável', color: '#e0a020', width: '50%' }
+    if (score === 3) return { label: 'Boa', color: '#4a90d9', width: '75%' }
+    return { label: 'Forte', color: 'var(--sucesso)', width: '100%' }
+  }
+
+  const forca = forcaPassword(passwordNova)
 
   return (
     <div>
@@ -119,11 +146,11 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
       {tab === 'dados' && (
         <div className="card">
           <div className="form-group">
-            <label className="form-label">Nome completo</label>
+            <label className="form-label">Nome completo *</label>
             <input className="form-input" value={form.nome} onChange={e=>set('nome',e.target.value)} />
           </div>
           <div className="form-group">
-            <label className="form-label">Telemóvel</label>
+            <label className="form-label">Telemóvel *</label>
             <input className="form-input" type="tel" value={form.telemovel} onChange={e=>set('telemovel',e.target.value)} placeholder="9XX XXX XXX" />
           </div>
           <div className="form-group">
@@ -204,16 +231,24 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
       {tab === 'password' && (
         <div className="card">
           <p style={{fontSize:'13px',color:'var(--texto-muted)',marginBottom:'1.25rem',lineHeight:1.6}}>
-            Para alterar a password, introduza a nova password desejada.
+            A password deve ter pelo menos 12 caracteres, uma maiúscula, um número e um símbolo.
           </p>
           <div className="form-group">
             <label className="form-label">Nova password</label>
             <div style={{position:'relative'}}>
-              <input className="form-input" type={verNova?'text':'password'} value={passwordNova} onChange={e=>setPasswordNova(e.target.value)} placeholder="mínimo 6 caracteres" style={{paddingRight:'44px'}} />
+              <input className="form-input" type={verNova?'text':'password'} value={passwordNova} onChange={e=>setPasswordNova(e.target.value)} placeholder="mínimo 12 caracteres" style={{paddingRight:'44px'}} />
               <span onClick={()=>setVerNova(v=>!v)} style={{position:'absolute',right:'14px',top:'50%',transform:'translateY(-50%)',cursor:'pointer',fontSize:'16px',color:'var(--texto-muted)'}}>
                 {verNova ? '🙈' : '👁️'}
               </span>
             </div>
+            {passwordNova && forca && (
+              <div style={{marginTop:'6px'}}>
+                <div style={{height:'4px',background:'var(--borda)',borderRadius:'2px',marginBottom:'4px'}}>
+                  <div style={{height:'100%',width:forca.width,background:forca.color,borderRadius:'2px',transition:'width 0.3s'}} />
+                </div>
+                <span style={{fontSize:'10px',color:forca.color,fontWeight:600}}>{forca.label}</span>
+              </div>
+            )}
           </div>
           <div className="form-group" style={{marginBottom:0}}>
             <label className="form-label">Confirmar nova password</label>
