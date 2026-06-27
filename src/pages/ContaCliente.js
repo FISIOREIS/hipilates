@@ -263,6 +263,12 @@ export default function ContaCliente({ perfil, onAtualizar, onSair }) {
                 {verConfirmar ? '🙈' : '👁️'}
               </span>
             </div>
+            {passwordConfirmar.length > 0 && (
+              <div style={{marginTop:'6px',display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:passwordNova===passwordConfirmar?'var(--sucesso)':'var(--erro)'}}>
+                <span style={{fontWeight:700,fontSize:'13px'}}>{passwordNova===passwordConfirmar ? '✓' : '✗'}</span>
+                {passwordNova===passwordConfirmar ? 'As passwords coincidem' : 'As passwords não coincidem'}
+              </div>
+            )}
           </div>
           <button className="btn btn-primary btn-full" onClick={alterarPassword} disabled={loading}>
             {loading ? 'A alterar...' : 'Alterar password'}
