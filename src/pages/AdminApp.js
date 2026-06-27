@@ -90,6 +90,8 @@ export default function AdminApp() {
   async function atribuirTurmaCalendario(clienteId, aulaId) {
     await validarInscricao(clienteId, [aulaId])
   }
+
+  async function carregarHoje() {
     const hoje = new Date().toISOString().split('T')[0]
     const { data } = await supabase.from('sessoes')
       .select('*, aulas(*, professores(nome)), marcacoes(*, profiles(nome))')
