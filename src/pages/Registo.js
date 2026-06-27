@@ -216,26 +216,24 @@ export default function Registo() {
               <div className="form-group">
                 <label className="form-label">Password *</label>
                 <div style={{position:'relative'}}>
-                  <input className="form-input" type={verPassword?'text':'password'} value={form.password} onChange={e=>set('password',e.target.value)} placeholder="mín. 12 caracteres, maiúscula, número, símbolo" style={{paddingRight:'44px'}} />
+                  <input className="form-input" type={verPassword?'text':'password'} value={form.password} onChange={e=>set('password',e.target.value)} placeholder="" style={{paddingRight:'44px'}} />
                   <span onClick={()=>setVerPassword(v=>!v)} style={{position:'absolute',right:'14px',top:'50%',transform:'translateY(-50%)',cursor:'pointer',fontSize:'16px',color:'var(--texto-muted)',userSelect:'none'}}>
                     {verPassword ? '🙈' : '👁️'}
                   </span>
                 </div>
-                {form.password && (
-                  <div style={{marginTop:'8px',display:'flex',flexDirection:'column',gap:'4px'}}>
-                    {[
-                      { ok: form.password.length >= 12, label: 'Mínimo 12 caracteres' },
-                      { ok: /[A-Z]/.test(form.password), label: 'Uma letra maiúscula' },
-                      { ok: /[0-9]/.test(form.password), label: 'Um número' },
-                      { ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password), label: 'Um símbolo (!@#$%...)' },
-                    ].map((r,i) => (
-                      <div key={i} style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:r.ok?'var(--sucesso)':'var(--texto-muted)'}}>
-                        <span style={{fontWeight:700,fontSize:'13px'}}>{r.ok ? '✓' : '✗'}</span>
-                        {r.label}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div style={{marginTop:'8px',display:'flex',flexDirection:'column',gap:'4px'}}>
+                  {[
+                    { ok: form.password.length >= 12, label: 'Mínimo 12 caracteres' },
+                    { ok: /[A-Z]/.test(form.password), label: 'Uma letra maiúscula' },
+                    { ok: /[0-9]/.test(form.password), label: 'Um número' },
+                    { ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password), label: 'Um símbolo (!@#$%...)' },
+                  ].map((r,i) => (
+                    <div key={i} style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:r.ok?'var(--sucesso)':'var(--texto-muted)'}}>
+                      <span style={{fontWeight:700,fontSize:'13px'}}>{r.ok ? '✓' : '✗'}</span>
+                      {r.label}
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Confirmar password *</label>
