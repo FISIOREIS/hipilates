@@ -43,15 +43,53 @@ export default function AdminApp() {
   const [pedidosAlteracao, setPedidosAlteracao] = useState([])
   const HORAS_FLEX = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']
   const [novasSessoes, setNovasSessoes] = useState([])
+  const [modoListaEspera, setModoListaEspera] = useState(false)
+  const [calendarioOcupacao, setCalendarioOcupacao] = useState({})
 
+  useEffect(()=>{ carregarModoListaEspera() },[])
   useEffect(()=>{ if(tab==='hoje') { carregarHoje(); carregarAniversarios() } },[tab])
+  useEffect(()=>{ if(tab==='inscricoes') carregarCalendarioOcupacao() },[tab])
   useEffect(()=>{ if(tab==='inscricoes') { carregarPendentes(); carregarClientes(); carregarAulas(); carregarProfessores() } },[tab])
   useEffect(()=>{ if(tab==='financeiro') carregarFinanceiro() },[tab])
   useEffect(()=>{ if(tab==='gestao') { carregarComunicados(); carregarFeriados(); carregarProfessores(); carregarListaEsperaGeral(); carregarBaixasPendentes(); carregarPedidosAlteracao() } },[tab])
   useEffect(()=>{ if(tab==='avaliacoes') carregarAvaliacoes() },[tab])
   useEffect(()=>{ if(tab==='chat') carregarTodasMensagens() },[tab])
 
-  async function carregarHoje() {
+  async function carregarModoListaEspera() {
+    const { data } = await supabase.from('configuracoes').select('valor').eq('chave','modo_lista_espera').maybeSingle()
+    setModoListaEspera(data?.valor === 'true')
+  }
+
+  async function toggleModoListaEspera() {
+    const novoValor = !modoListaEspera
+    await supabase.from('configuracoes').upsert({ chave: 'modo_lista_espera', valor: novoValor ? 'true' : 'false', atualizado_em: new Date().toISOString() }, { onConflict: 'chave' })
+    setModoListaEspera(novoValor)
+    mostrarNotif(novoValor ? 'Modo lista de espera ativado.' : 'Modo lista de espera desativado.')
+  }
+
+  async function carregarCalendarioOcupacao() {
+    const hoje = new Date()
+    const inicioSemana = new Date(hoje)
+    inicioSemana.setDate(hoje.getDate() - hoje.getDay() + 1)
+    const fimSemana = new Date(inicioSemana)
+    fimSemana.setDate(inicioSemana.getDate() + 6)
+    const { data } = await supabase.from('sessoes')
+      .select('id, aula_id, data, aulas(dia_semana, hora, max_pessoas), marcacoes(id, estado)')
+      .gte('data', inicioSemana.toISOString().split('T')[0])
+      .lte('data', fimSemana.toISOString().split('T')[0])
+      .eq('cancelada', false)
+    const ocup = {}
+    for (const s of data || []) {
+      const key = `${s.aulas?.dia_semana}-${s.aulas?.hora?.slice(0,5)}`
+      const inscritos = (s.marcacoes||[]).filter(m=>m.estado!=='cancelada').length
+      ocup[key] = { inscritos, max: s.aulas?.max_pessoas || 5, sessao_id: s.id }
+    }
+    setCalendarioOcupacao(ocup)
+  }
+
+  async function atribuirTurmaCalendario(clienteId, aulaId) {
+    await validarInscricao(clienteId, [aulaId])
+  }
     const hoje = new Date().toISOString().split('T')[0]
     const { data } = await supabase.from('sessoes')
       .select('*, aulas(*, professores(nome)), marcacoes(*, profiles(nome))')
@@ -107,8 +145,8 @@ export default function AdminApp() {
       '2x': ativos.filter(p=>p.plano==='2x_semana').length,
       duo: ativos.filter(p=>p.plano==='duo').length,
       individual: ativos.filter(p=>p.plano==='individual').length,
-      receita1x: ativos.filter(p=>p.plano==='1x_semana').length * 60,
-      receita2x: ativos.filter(p=>p.plano==='2x_semana').length * 100,
+      receita1x: ativos.filter(p=>p.plano==='1x_semana').length * 55,
+      receita2x: ativos.filter(p=>p.plano==='2x_semana').length * 90,
       clientes: ativos,
       mes: new Date().getMonth()+1,
       ano: new Date().getFullYear()
@@ -375,7 +413,7 @@ export default function AdminApp() {
     <div className="app-wrap">
       {notif && <div className="notif-toast">{notif}</div>}
       <div className="header">
-        <div className="logo"><LogoSVG /> <span><span className="logo-hi">Hi</span>pilates</span></div>
+        <div className="logo"><img src="/simbolo__header_.png" alt="Hipilates" style={{height:'28px',objectFit:'contain'}} /> <span style={{fontSize:'15px',fontWeight:600,letterSpacing:'1px'}}>hipilates</span></div>
         <div className="user-menu" onClick={sair}>Sair</div>
       </div>
       <div style={{background:'var(--grafite)',padding:'8px 1.5rem',borderBottom:'0.5px solid var(--grafite-suave)'}}>
@@ -472,37 +510,58 @@ export default function AdminApp() {
                     {c.medicacao && <div className="modal-row"><span className="modal-label">Medicação</span><span style={{fontSize:'11px'}}>{c.medicacao_descricao}</span></div>}
                     {c.acompanhante_nome && <div className="modal-row"><span className="modal-label">Acompanhante</span><span style={{fontSize:'11px'}}>{c.acompanhante_nome} · {c.acompanhante_contacto}</span></div>}
                     <div className="divider" />
-                    <div className="form-group" style={{marginBottom:'10px'}}>
-                      <label className="form-label">Atribuir turma{c.plano==='2x_semana'?' (1ª aula)':''}</label>
-                      <select className="form-select" id={`turma-${c.id}`}>
-                        <option value="">Selecione uma turma...</option>
-                        {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
-                      </select>
+                    <div style={{fontSize:'9px',letterSpacing:'2px',textTransform:'uppercase',color:'var(--madeira)',marginBottom:'10px',fontWeight:600}}>Atribuir turma — calendário desta semana</div>
+                    <div style={{overflowX:'auto',marginBottom:'12px'}}>
+                      <table style={{width:'100%',borderCollapse:'collapse',fontSize:'11px'}}>
+                        <thead>
+                          <tr>
+                            <th style={{padding:'4px 6px',color:'var(--texto-muted)',fontWeight:500,textAlign:'left'}}>Hora</th>
+                            {['Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => (
+                              <th key={d} style={{padding:'4px 6px',color:'var(--texto-muted)',fontWeight:500,textAlign:'center'}}>{d}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {['08:00','09:00','10:00','11:00','12:00','16:00','17:00','18:00','19:00'].map(hora => (
+                            <tr key={hora}>
+                              <td style={{padding:'3px 6px',color:'var(--texto-muted)',fontWeight:500,whiteSpace:'nowrap'}}>{hora}</td>
+                              {[1,2,3,4,5,6].map(dia => {
+                                const key = `${dia}-${hora}`
+                                const slot = aulas.find(a => a.dia_semana===dia && a.hora?.slice(0,5)===hora)
+                                const ocup = calendarioOcupacao[key]
+                                if (!slot) return <td key={dia} style={{padding:'3px 4px',textAlign:'center'}}><span style={{color:'var(--borda)',fontSize:'10px'}}>—</span></td>
+                                const inscritos = ocup?.inscritos || 0
+                                const max = ocup?.max || slot.max_pessoas || 5
+                                const cheio = inscritos >= max
+                                return (
+                                  <td key={dia} style={{padding:'3px 4px',textAlign:'center'}}>
+                                    <button
+                                      onClick={()=>{ if(!cheio) atribuirTurmaCalendario(c.id, slot.id) }}
+                                      style={{
+                                        padding:'4px 6px',
+                                        borderRadius:'4px',
+                                        border:'none',
+                                        cursor:cheio?'not-allowed':'pointer',
+                                        background:cheio?'#f0d0d0':inscritos>0?'#d0e8d0':'#e8f0e8',
+                                        color:cheio?'#c04040':inscritos>0?'#2a6a2a':'#4a7a4a',
+                                        fontSize:'10px',
+                                        fontWeight:600,
+                                        minWidth:'32px',
+                                        opacity:cheio?0.7:1
+                                      }}
+                                      title={cheio?'Turma cheia':`${inscritos}/${max} — clique para atribuir`}
+                                    >
+                                      {inscritos}/{max}
+                                    </button>
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                    {c.plano==='2x_semana' && (
-                      <div className="form-group" style={{marginBottom:'10px'}}>
-                        <label className="form-label">Atribuir turma (2ª aula)</label>
-                        <select className="form-select" id={`turma2-${c.id}`}>
-                          <option value="">Selecione uma turma...</option>
-                          {aulas.map(a => <option key={a.id} value={a.id}>{DIAS_SEMANA[a.dia_semana]} {a.hora?.slice(0,5)} — {a.professores?.nome||'Professor'}</option>)}
-                        </select>
-                      </div>
-                    )}
-                    <div style={{display:'flex',gap:'8px'}}>
-                      <button className="btn btn-danger btn-full" style={{marginTop:0}} onClick={()=>rejeitarInscricao(c.id)}>Rejeitar</button>
-                      <button className="btn btn-primary btn-full" style={{marginTop:0}} onClick={()=>{
-                        const sel = document.getElementById(`turma-${c.id}`)
-                        if (!sel.value) { alert('Selecione uma turma primeiro.'); return }
-                        const aulaIds = [sel.value]
-                        if (c.plano==='2x_semana') {
-                          const sel2 = document.getElementById(`turma2-${c.id}`)
-                          if (!sel2.value) { alert('Selecione a 2ª turma.'); return }
-                          if (sel2.value === sel.value) { alert('As duas turmas devem ser diferentes.'); return }
-                          aulaIds.push(sel2.value)
-                        }
-                        validarInscricao(c.id, aulaIds)
-                      }}>Validar + turma{c.plano==='2x_semana'?'s':''}</button>
-                    </div>
+                    <p style={{fontSize:'10px',color:'var(--texto-muted)',marginBottom:'10px'}}>🟢 Com vagas — clique para atribuir · 🔴 Cheio</p>
                   </div>
                 ))}
               </>
@@ -550,7 +609,7 @@ export default function AdminApp() {
             <div className="card">
               {financeiro.clientes.filter(c=>['1x_semana','2x_semana'].includes(c.plano)).map(c => {
                 const pago = pagamentos.find(p=>p.cliente_id===c.id&&p.mes===financeiro.mes&&p.ano===financeiro.ano&&p.estado==='pago')
-                const valor = c.plano==='1x_semana'?60:100
+                const valor = c.plano==='1x_semana'?55:90
                 return (
                   <div key={c.id} className="cliente-row">
                     <div className="cliente-av">{c.nome?.slice(0,2).toUpperCase()}</div>
@@ -628,7 +687,28 @@ export default function AdminApp() {
         {/* GESTÃO */}
         {tab === 'gestao' && (
           <>
-            {baixasPendentes.length > 0 && (
+            <div className="section-title">Modo lista de espera</div>
+            <div className="card" style={{marginBottom:'10px'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div>
+                  <div style={{fontSize:'14px',fontWeight:500,color:'var(--grafite)',marginBottom:'4px'}}>
+                    {modoListaEspera ? '🔴 Estúdio com capacidade máxima' : '🟢 Estúdio com vagas disponíveis'}
+                  </div>
+                  <div style={{fontSize:'12px',color:'var(--texto-muted)',lineHeight:1.5}}>
+                    {modoListaEspera
+                      ? 'Novos inscritos são colocados em lista de espera automaticamente.'
+                      : 'Novos inscritos entram normalmente.'}
+                  </div>
+                </div>
+                <button
+                  className={`btn ${modoListaEspera?'btn-danger':'btn-primary'}`}
+                  style={{marginTop:0,flexShrink:0,marginLeft:'12px'}}
+                  onClick={toggleModoListaEspera}
+                >
+                  {modoListaEspera ? 'Desativar' : 'Ativar'}
+                </button>
+              </div>
+            </div>
               <>
                 <div className="section-title">Justificações médicas ({baixasPendentes.length})</div>
                 {baixasPendentes.map(b => (
